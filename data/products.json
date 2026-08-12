@@ -1,0 +1,85 @@
+[
+  {
+    "id": "AB-001",
+    "name": "The Signature Black",
+    "category": "signature",
+    "color": "black",
+    "occasion": ["evening", "formal", "everyday"],
+    "style": ["minimal", "elegant", "classic"],
+    "comfort": "high",
+    "coverage": "full",
+    "description": "A timeless full-coverage black burqa designed around a clean and understated silhouette.",
+    "image": "image08.jpg",
+    "tags": [
+      "black",
+      "minimal",
+      "elegant",
+      "formal",
+      "comfortable",
+      "full coverage"
+    ]
+  },
+
+  {
+    "id": "AB-002",
+    "name": "Soft Everyday",
+    "category": "everyday",
+    "color": "neutral",
+    "occasion": ["everyday", "travel", "work"],
+    "style": ["comfortable", "minimal", "soft"],
+    "comfort": "very-high",
+    "coverage": "full",
+    "description": "A comfort-first silhouette created for everyday movement and effortless modest dressing.",
+    "image": "image09.jpg",
+    "tags": [
+      "neutral",
+      "everyday",
+      "travel",
+      "comfortable",
+      "soft",
+      "full coverage"
+    ]
+  },
+
+  {
+    "id": "AB-003",
+    "name": "Occasion Edit",
+    "category": "occasion",
+    "color": "dark",
+    "occasion": ["wedding", "party", "evening", "formal"],
+    "style": ["elegant", "statement", "refined"],
+    "comfort": "high",
+    "coverage": "full",
+    "description": "A refined occasion silhouette designed for weddings, celebrations and evening events.",
+    "image": "image10.jpg",
+    "tags": [
+      "occasion",
+      "wedding",
+      "party",
+      "evening",
+      "elegant",
+      "statement"
+    ]
+  },
+
+  {
+    "id": "AB-004",
+    "name": "Modern Flow",
+    "category": "contemporary",
+    "color": "brown",
+    "occasion": ["everyday", "evening", "work"],
+    "style": ["contemporary", "flowing", "minimal"],
+    "comfort": "high",
+    "coverage": "full",
+    "description": "A contemporary flowing silhouette balancing traditional modesty with modern proportions.",
+    "image": "image11.jpg",
+    "tags": [
+      "brown",
+      "modern",
+      "contemporary",
+      "flowing",
+      "minimal",
+      "comfortable"
+    ]
+  }
+]
