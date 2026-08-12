@@ -1,12 +1,60 @@
+import { searchProducts } from "./ai/search.js";
+
+
 /* =========================================
-   ABAIRA — FRONTEND INTERACTIONS
+   ABAIRA APPLICATION
 ========================================= */
+
+
+let products = [];
+
+
+/* ================= LOAD PRODUCT DATA ================= */
+
+async function loadProducts() {
+
+  try {
+
+    const response =
+      await fetch("./data/products.json");
+
+
+    if (!response.ok) {
+      throw new Error("Product dataset could not be loaded.");
+    }
+
+
+    products = await response.json();
+
+    console.log(
+      `ABAIRA dataset loaded: ${products.length} products`
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "ABAIRA data error:",
+      error
+    );
+
+  }
+
+}
+
+
+loadProducts();
 
 
 /* ================= MOBILE MENU ================= */
 
-const menuBtn = document.getElementById("menuBtn");
-const navLinks = document.getElementById("navLinks");
+const menuBtn =
+  document.getElementById("menuBtn");
+
+const navLinks =
+  document.getElementById("navLinks");
+
 
 if (menuBtn && navLinks) {
 
@@ -21,11 +69,14 @@ if (menuBtn && navLinks) {
 
 /* ================= AI MODAL ================= */
 
-const modal = document.getElementById("aiModal");
+const modal =
+  document.getElementById("aiModal");
 
-const modalClose = document.getElementById("modalClose");
+const modalClose =
+  document.getElementById("modalClose");
 
-const modalTitle = document.getElementById("modalTitle");
+const modalTitle =
+  document.getElementById("modalTitle");
 
 const modalDescription =
   document.getElementById("modalDescription");
@@ -47,13 +98,10 @@ const aiConcepts = {
     title: "Semantic Search",
 
     description:
-      "Describe the kind of burqa you are looking for. In the production version, this input will be converted into an embedding and matched against the ABAIRA collection.",
+      "Describe the burqa you are looking for. ABAIRA currently uses a retrieval baseline; the next version will replace it with embedding-based semantic search.",
 
     placeholder:
-      "e.g. elegant black burqa for an evening event",
-
-    result:
-      "Prototype pipeline → Natural language → Embedding → Vector retrieval → Ranked ABAIRA results."
+      "e.g. elegant black burqa for an evening event"
 
   },
 
@@ -63,13 +111,10 @@ const aiConcepts = {
     title: "AI Stylist",
 
     description:
-      "Tell ABAIRA about your occasion, preferences or existing wardrobe. The future recommendation engine will combine these signals to generate personalized suggestions.",
+      "Describe your occasion and preferences. The recommendation system will use these signals to rank suitable ABAIRA designs.",
 
     placeholder:
-      "e.g. I need a comfortable black burqa for a wedding",
-
-    result:
-      "Prototype pipeline → Occasion + preferences + wardrobe context → Recommendation model → Personalized suggestions."
+      "e.g. comfortable burqa for a wedding"
 
   },
 
@@ -79,59 +124,55 @@ const aiConcepts = {
     title: "Visual Discovery",
 
     description:
-      "Use a reference image to discover visually related ABAIRA designs. The production system will use image embeddings and similarity search.",
+      "Describe the visual characteristics of your reference look. Image-embedding retrieval will be added in the computer-vision stage.",
 
     placeholder:
-      "Describe your reference look",
-
-    result:
-      "Prototype pipeline → Reference image → Vision embedding → Similarity search → Related ABAIRA designs."
+      "e.g. flowing dark minimalist design"
 
   }
 
 };
 
 
-/* ================= OPEN AI MODAL ================= */
+/* ================= OPEN MODAL ================= */
 
-const aiButtons =
-  document.querySelectorAll(".ai-demo");
+document
+  .querySelectorAll(".ai-demo")
+  .forEach(button => {
 
+    button.addEventListener("click", () => {
 
-aiButtons.forEach(button => {
+      const type =
+        button.dataset.ai;
 
-  button.addEventListener("click", () => {
-
-    const type = button.dataset.ai;
-
-    const concept = aiConcepts[type];
-
-    if (!concept || !modal) return;
+      const concept =
+        aiConcepts[type];
 
 
-    modalTitle.textContent =
-      concept.title;
+      if (!concept) return;
 
 
-    modalDescription.textContent =
-      concept.description;
+      modalTitle.textContent =
+        concept.title;
 
 
-    aiInput.placeholder =
-      concept.placeholder;
+      modalDescription.textContent =
+        concept.description;
 
 
-    aiInput.value = "";
+      aiInput.placeholder =
+        concept.placeholder;
 
 
-    aiResult.textContent = "";
+      aiInput.value = "";
 
+      aiResult.innerHTML = "";
 
-    modal.classList.add("show");
+      modal.classList.add("show");
+
+    });
 
   });
-
-});
 
 
 /* ================= CLOSE MODAL ================= */
@@ -146,8 +187,6 @@ if (modalClose) {
 
 }
 
-
-/* Close by clicking outside */
 
 if (modal) {
 
@@ -164,13 +203,10 @@ if (modal) {
 }
 
 
-/* Close using Escape */
-
 document.addEventListener("keydown", event => {
 
   if (
     event.key === "Escape" &&
-    modal &&
     modal.classList.contains("show")
   ) {
 
@@ -181,50 +217,22 @@ document.addEventListener("keydown", event => {
 });
 
 
-/* ================= AI DEMO RESPONSE ================= */
+/* ================= SEARCH ================= */
 
 if (aiRun) {
 
-  aiRun.addEventListener("click", () => {
+  aiRun.addEventListener("click", runAISearch);
 
-    const query =
-      aiInput.value.trim();
-
-
-    if (!query) {
-
-      aiResult.textContent =
-        "Please describe the burqa or style you are looking for.";
-
-      return;
-
-    }
+}
 
 
-    const activeTitle =
-      modalTitle.textContent;
+if (aiInput) {
 
+  aiInput.addEventListener("keydown", event => {
 
-    if (activeTitle === "Semantic Search") {
+    if (event.key === "Enter") {
 
-      aiResult.textContent =
-        "Concept result: your fashion intent has been identified. A production embedding model would now retrieve the closest ABAIRA designs.";
-
-    }
-
-
-    else if (activeTitle === "AI Stylist") {
-
-      aiResult.textContent =
-        "Concept result: occasion and preference signals detected. A production recommendation model would generate personalized ABAIRA suggestions.";
-
-    }
-
-
-    else {
-
-      aiResult.textContent =
-        "Concept result: visual-search workflow ready. A production vision model would compare the reference against ABAIRA image embeddings.";
+      runAISearch();
 
     }
 
@@ -233,22 +241,160 @@ if (aiRun) {
 }
 
 
-/* ================= IMAGE FALLBACK ================= */
+function runAISearch() {
 
-/*
-   If one of the original images is missing,
-   the browser will show a neutral fallback
-   instead of breaking the layout.
-*/
+  const query =
+    aiInput.value.trim();
 
-document.querySelectorAll("img").forEach(image => {
 
-  image.addEventListener("error", () => {
+  if (!query) {
 
-    image.style.background = "#e5ddd5";
+    aiResult.innerHTML = `
+      <p>Please describe the style you're looking for.</p>
+    `;
 
-    image.alt = "ABAIRA collection image";
+    return;
 
-  });
+  }
 
-});
+
+  if (!products.length) {
+
+    aiResult.innerHTML = `
+      <p>
+        ABAIRA collection data is still loading.
+        Please try again.
+      </p>
+    `;
+
+    return;
+
+  }
+
+
+  const results =
+    searchProducts(query, products);
+
+
+  renderResults(results, query);
+
+}
+
+
+/* ================= RENDER RESULTS ================= */
+
+function renderResults(results, query) {
+
+  if (!results.length) {
+
+    aiResult.innerHTML = `
+
+      <div class="no-result">
+
+        <strong>
+          No close match found.
+        </strong>
+
+        <p>
+          Try words such as:
+          black, elegant, wedding,
+          comfortable, everyday or evening.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  const topResults =
+    results.slice(0, 3);
+
+
+  aiResult.innerHTML = `
+
+    <div class="search-heading">
+
+      <strong>
+        ABAIRA discovery results
+      </strong>
+
+      <span>
+        ${topResults.length} matches
+      </span>
+
+    </div>
+
+    <div class="ai-results-grid">
+
+      ${topResults.map(product => `
+
+        <article class="ai-result-card">
+
+          <div class="ai-result-image">
+
+            <img
+              src="${product.image}"
+              alt="${product.name}"
+            >
+
+          </div>
+
+          <div class="ai-result-content">
+
+            <span>
+              ${product.category}
+            </span>
+
+            <h3>
+              ${product.name}
+            </h3>
+
+            <p>
+              ${product.description}
+            </p>
+
+            <small>
+              Match score: ${product.score}
+            </small>
+
+          </div>
+
+        </article>
+
+      `).join("")}
+
+    </div>
+
+    <div class="retrieval-note">
+
+      Query:
+      <strong>"${escapeHTML(query)}"</strong>
+
+      <br>
+
+      Current engine:
+      <strong>Keyword Retrieval Baseline</strong>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ================= SECURITY ================= */
+
+function escapeHTML(text) {
+
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
