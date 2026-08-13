@@ -9,17 +9,8 @@
     "comfort": "high",
     "coverage": "full",
     "description": "A timeless full-coverage black burqa designed around a clean and understated silhouette.",
-    "image": "image08.jpg",
-    "tags": [
-      "black",
-      "minimal",
-      "elegant",
-      "formal",
-      "comfortable",
-      "full coverage"
-    ]
+    "image": "image08.jpg"
   },
-
   {
     "id": "AB-002",
     "name": "Soft Everyday",
@@ -30,17 +21,8 @@
     "comfort": "very-high",
     "coverage": "full",
     "description": "A comfort-first silhouette created for everyday movement and effortless modest dressing.",
-    "image": "image09.jpg",
-    "tags": [
-      "neutral",
-      "everyday",
-      "travel",
-      "comfortable",
-      "soft",
-      "full coverage"
-    ]
+    "image": "image09.jpg"
   },
-
   {
     "id": "AB-003",
     "name": "Occasion Edit",
@@ -51,17 +33,8 @@
     "comfort": "high",
     "coverage": "full",
     "description": "A refined occasion silhouette designed for weddings, celebrations and evening events.",
-    "image": "image10.jpg",
-    "tags": [
-      "occasion",
-      "wedding",
-      "party",
-      "evening",
-      "elegant",
-      "statement"
-    ]
+    "image": "image10.jpg"
   },
-
   {
     "id": "AB-004",
     "name": "Modern Flow",
@@ -72,14 +45,6 @@
     "comfort": "high",
     "coverage": "full",
     "description": "A contemporary flowing silhouette balancing traditional modesty with modern proportions.",
-    "image": "image11.jpg",
-    "tags": [
-      "brown",
-      "modern",
-      "contemporary",
-      "flowing",
-      "minimal",
-      "comfortable"
-    ]
+    "image": "image11.jpg"
   }
 ]
