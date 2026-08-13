@@ -219,67 +219,86 @@ document.addEventListener("keydown", event => {
 
 /* ================= SEARCH ================= */
 
-if (aiRun) {
+async function runAISearch() {
 
-  aiRun.addEventListener("click", runAISearch);
-
-}
-
-
-if (aiInput) {
-
-  aiInput.addEventListener("keydown", event => {
-
-    if (event.key === "Enter") {
-
-      runAISearch();
-
-    }
-
-  });
-
-}
-
-
-function runAISearch() {
-
-  const query =
-    aiInput.value.trim();
-
+  const query = aiInput.value.trim();
 
   if (!query) {
 
     aiResult.innerHTML = `
-      <p>Please describe the style you're looking for.</p>
-    `;
-
-    return;
-
-  }
-
-
-  if (!products.length) {
-
-    aiResult.innerHTML = `
       <p>
-        ABAIRA collection data is still loading.
-        Please try again.
+        Please describe the style you're looking for.
       </p>
     `;
 
     return;
-
   }
 
 
-  const results =
-    searchProducts(query, products);
+  aiResult.innerHTML = `
+    <p>
+      Searching the ABAIRA semantic index...
+    </p>
+  `;
 
 
-  renderResults(results, query);
+  try {
+
+    const response = await fetch(
+      "http://localhost:3000/api/search",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          query
+        })
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Search failed."
+      );
+    }
+
+
+    renderSemanticResults(
+      data.results,
+      data.query
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    aiResult.innerHTML = `
+      <div class="no-result">
+
+        <strong>
+          AI search unavailable
+        </strong>
+
+        <p>
+          Make sure the ABAIRA AI backend
+          is running on port 3000.
+        </p>
+
+      </div>
+    `;
+
+  }
 
 }
-
 
 /* ================= RENDER RESULTS ================= */
 
