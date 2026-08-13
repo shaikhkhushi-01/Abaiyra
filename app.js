@@ -1,73 +1,10 @@
-import { searchProducts } from "./ai/search.js";
-
-
 /* =========================================
-   ABAIRA APPLICATION
+   ABAIRA AI STUDIO
+   Semantic Search Frontend
 ========================================= */
 
 
-let products = [];
-
-
-/* ================= LOAD PRODUCT DATA ================= */
-
-async function loadProducts() {
-
-  try {
-
-    const response =
-      await fetch("./data/products.json");
-
-
-    if (!response.ok) {
-      throw new Error("Product dataset could not be loaded.");
-    }
-
-
-    products = await response.json();
-
-    console.log(
-      `ABAIRA dataset loaded: ${products.length} products`
-    );
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "ABAIRA data error:",
-      error
-    );
-
-  }
-
-}
-
-
-loadProducts();
-
-
-/* ================= MOBILE MENU ================= */
-
-const menuBtn =
-  document.getElementById("menuBtn");
-
-const navLinks =
-  document.getElementById("navLinks");
-
-
-if (menuBtn && navLinks) {
-
-  menuBtn.addEventListener("click", () => {
-
-    navLinks.classList.toggle("open");
-
-  });
-
-}
-
-
-/* ================= AI MODAL ================= */
+/* ================= DOM ELEMENTS ================= */
 
 const modal =
   document.getElementById("aiModal");
@@ -91,6 +28,28 @@ const aiResult =
   document.getElementById("aiResult");
 
 
+/* ================= MOBILE MENU ================= */
+
+const menuBtn =
+  document.getElementById("menuBtn");
+
+const navLinks =
+  document.getElementById("navLinks");
+
+
+if (menuBtn && navLinks) {
+
+  menuBtn.addEventListener("click", () => {
+
+    navLinks.classList.toggle("open");
+
+  });
+
+}
+
+
+/* ================= AI CONCEPTS ================= */
+
 const aiConcepts = {
 
   search: {
@@ -98,7 +57,7 @@ const aiConcepts = {
     title: "Semantic Search",
 
     description:
-      "Describe the burqa you are looking for. ABAIRA currently uses a retrieval baseline; the next version will replace it with embedding-based semantic search.",
+      "Describe the kind of burqa you are looking for. ABAIRA converts your natural-language query into an embedding and retrieves the most semantically relevant designs.",
 
     placeholder:
       "e.g. elegant black burqa for an evening event"
@@ -111,10 +70,10 @@ const aiConcepts = {
     title: "AI Stylist",
 
     description:
-      "Describe your occasion and preferences. The recommendation system will use these signals to rank suitable ABAIRA designs.",
+      "Describe your occasion, comfort preferences and style. ABAIRA will rank the collection according to your requirements.",
 
     placeholder:
-      "e.g. comfortable burqa for a wedding"
+      "e.g. comfortable and elegant burqa for a wedding"
 
   },
 
@@ -124,7 +83,7 @@ const aiConcepts = {
     title: "Visual Discovery",
 
     description:
-      "Describe the visual characteristics of your reference look. Image-embedding retrieval will be added in the computer-vision stage.",
+      "Describe the visual characteristics of the design you want. Image-based retrieval will be added in the computer-vision stage.",
 
     placeholder:
       "e.g. flowing dark minimalist design"
@@ -134,7 +93,7 @@ const aiConcepts = {
 };
 
 
-/* ================= OPEN MODAL ================= */
+/* ================= OPEN AI MODAL ================= */
 
 document
   .querySelectorAll(".ai-demo")
@@ -149,7 +108,9 @@ document
         aiConcepts[type];
 
 
-      if (!concept) return;
+      if (!concept) {
+        return;
+      }
 
 
       modalTitle.textContent =
@@ -166,7 +127,9 @@ document
 
       aiInput.value = "";
 
+
       aiResult.innerHTML = "";
+
 
       modal.classList.add("show");
 
@@ -175,7 +138,7 @@ document
   });
 
 
-/* ================= CLOSE MODAL ================= */
+/* ================= CLOSE AI MODAL ================= */
 
 if (modalClose) {
 
@@ -207,6 +170,7 @@ document.addEventListener("keydown", event => {
 
   if (
     event.key === "Escape" &&
+    modal &&
     modal.classList.contains("show")
   ) {
 
@@ -217,58 +181,112 @@ document.addEventListener("keydown", event => {
 });
 
 
-/* ================= SEARCH ================= */
+/* ================= AI SEARCH ================= */
 
 async function runAISearch() {
 
-  const query = aiInput.value.trim();
+  const query =
+    aiInput.value.trim();
+
+
+  /* ---------- EMPTY QUERY ---------- */
 
   if (!query) {
 
     aiResult.innerHTML = `
-      <p>
-        Please describe the style you're looking for.
-      </p>
+
+      <div class="no-result">
+
+        <strong>
+          Tell ABAIRA what you're looking for.
+        </strong>
+
+        <p>
+          Example: elegant black burqa for a wedding.
+        </p>
+
+      </div>
+
     `;
 
     return;
+
   }
 
 
+  /* ---------- LOADING STATE ---------- */
+
   aiResult.innerHTML = `
-    <p>
-      Searching the ABAIRA semantic index...
-    </p>
+
+    <div class="ai-loading">
+
+      <div class="loading-dot"></div>
+
+      <p>
+        Understanding your request...
+      </p>
+
+      <small>
+        Searching the ABAIRA semantic index
+      </small>
+
+    </div>
+
   `;
 
 
   try {
 
-    const response = await fetch(
-      "http://localhost:3000/api/search",
-      {
-        method: "POST",
+    /*
+      IMPORTANT:
 
-        headers: {
-          "Content-Type": "application/json"
-        },
+      The frontend sends the query
+      to our backend.
 
-        body: JSON.stringify({
-          query
-        })
-      }
-    );
+      The API key NEVER lives here.
+    */
+
+    const response =
+      await fetch(
+        "http://localhost:3000/api/search",
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json"
+
+          },
+
+          body: JSON.stringify({
+
+            query: query
+
+          })
+
+        }
+      );
 
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
+
+    /* ---------- API ERROR ---------- */
 
     if (!response.ok) {
+
       throw new Error(
-        data.error || "Search failed."
+        data.error ||
+        "Semantic search failed."
       );
+
     }
 
+
+    /* ---------- RENDER RESULTS ---------- */
 
     renderSemanticResults(
       data.results,
@@ -277,47 +295,91 @@ async function runAISearch() {
 
   }
 
+
   catch (error) {
 
-    console.error(error);
+    console.error(
+      "ABAIRA AI Search Error:",
+      error
+    );
+
 
     aiResult.innerHTML = `
+
       <div class="no-result">
 
         <strong>
-          AI search unavailable
+          ABAIRA AI is currently unavailable.
         </strong>
 
         <p>
-          Make sure the ABAIRA AI backend
-          is running on port 3000.
+          Please make sure the ABAIRA AI
+          backend is running on port 3000.
         </p>
 
       </div>
+
     `;
 
   }
 
 }
 
-/* ================= RENDER RESULTS ================= */
 
-function renderResults(results, query) {
+/* ================= SEARCH BUTTON ================= */
 
-  if (!results.length) {
+if (aiRun) {
+
+  aiRun.addEventListener(
+    "click",
+    runAISearch
+  );
+
+}
+
+
+/* ================= ENTER KEY ================= */
+
+if (aiInput) {
+
+  aiInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (event.key === "Enter") {
+
+        runAISearch();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* ================= RENDER SEMANTIC RESULTS ================= */
+
+function renderSemanticResults(
+  results,
+  query
+) {
+
+  /* ---------- NO RESULTS ---------- */
+
+  if (!results || !results.length) {
 
     aiResult.innerHTML = `
 
       <div class="no-result">
 
         <strong>
-          No close match found.
+          No close ABAIRA match found.
         </strong>
 
         <p>
-          Try words such as:
-          black, elegant, wedding,
-          comfortable, everyday or evening.
+          Try describing an occasion,
+          style, colour or comfort preference.
         </p>
 
       </div>
@@ -328,6 +390,11 @@ function renderResults(results, query) {
 
   }
 
+
+  /*
+    We only show the top 3
+    semantically ranked products.
+  */
 
   const topResults =
     results.slice(0, 3);
@@ -337,9 +404,17 @@ function renderResults(results, query) {
 
     <div class="search-heading">
 
-      <strong>
-        ABAIRA discovery results
-      </strong>
+      <div>
+
+        <strong>
+          ABAIRA AI Recommendations
+        </strong>
+
+        <p>
+          Ranked using semantic similarity
+        </p>
+
+      </div>
 
       <span>
         ${topResults.length} matches
@@ -347,56 +422,44 @@ function renderResults(results, query) {
 
     </div>
 
+
     <div class="ai-results-grid">
 
-      ${topResults.map(product => `
-
-        <article class="ai-result-card">
-
-          <div class="ai-result-image">
-
-            <img
-              src="${product.image}"
-              alt="${product.name}"
-            >
-
-          </div>
-
-          <div class="ai-result-content">
-
-            <span>
-              ${product.category}
-            </span>
-
-            <h3>
-              ${product.name}
-            </h3>
-
-            <p>
-              ${product.description}
-            </p>
-
-            <small>
-              Match score: ${product.score}
-            </small>
-
-          </div>
-
-        </article>
-
-      `).join("")}
+      ${topResults
+        .map(product =>
+          createProductCard(product)
+        )
+        .join("")}
 
     </div>
 
+
     <div class="retrieval-note">
 
-      Query:
-      <strong>"${escapeHTML(query)}"</strong>
+      <div>
 
-      <br>
+        <span>
+          YOUR REQUEST
+        </span>
 
-      Current engine:
-      <strong>Keyword Retrieval Baseline</strong>
+        <strong>
+          "${escapeHTML(query)}"
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          RETRIEVAL METHOD
+        </span>
+
+        <strong>
+          Embedding-based semantic search
+        </strong>
+
+      </div>
 
     </div>
 
@@ -405,15 +468,175 @@ function renderResults(results, query) {
 }
 
 
-/* ================= SECURITY ================= */
+/* ================= PRODUCT CARD ================= */
+
+function createProductCard(product) {
+
+  /*
+    Convert similarity score into
+    a readable percentage.
+
+    We clamp it between 0 and 100
+    for safe UI rendering.
+  */
+
+  const rawScore =
+    Number(product.similarity) || 0;
+
+
+  const similarity =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(rawScore * 100)
+      )
+    );
+
+
+  return `
+
+    <article
+      class="ai-result-card"
+      data-product-id="${escapeHTML(
+        product.id
+      )}"
+    >
+
+      <div class="ai-result-image">
+
+        <img
+          src="${escapeHTML(product.image)}"
+          alt="${escapeHTML(product.name)}"
+          loading="lazy"
+        >
+
+        <div class="similarity-badge">
+
+          ${similarity}% match
+
+        </div>
+
+      </div>
+
+
+      <div class="ai-result-content">
+
+        <span class="product-category">
+
+          ${escapeHTML(
+            product.category
+          )}
+
+        </span>
+
+
+        <h3>
+
+          ${escapeHTML(
+            product.name
+          )}
+
+        </h3>
+
+
+        <p>
+
+          ${escapeHTML(
+            product.description
+          )}
+
+        </p>
+
+
+        <div class="product-meta">
+
+          <span>
+
+            ${escapeHTML(
+              product.color
+            )}
+
+          </span>
+
+
+          <span>
+
+            ${escapeHTML(
+              product.comfort
+            )}
+            comfort
+
+          </span>
+
+
+          <span>
+
+            ${escapeHTML(
+              product.coverage
+            )}
+            coverage
+
+          </span>
+
+        </div>
+
+
+        <div class="match-bar">
+
+          <div
+            class="match-bar-fill"
+            style="width:${similarity}%"
+          ></div>
+
+        </div>
+
+
+        <small>
+
+          Semantic similarity:
+          ${similarity}%
+
+        </small>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+/* ================= HTML ESCAPE ================= */
 
 function escapeHTML(text) {
 
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(text)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
