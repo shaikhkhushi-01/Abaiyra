@@ -1862,3 +1862,234 @@ input {
   }
 
 }
+
+/* =========================================
+   ABAIRA AI SEARCH RESULTS
+========================================= */
+
+.search-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-top: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.search-heading strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.search-heading p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.search-heading > span {
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.ai-results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.ai-result-card {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.ai-result-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.ai-result-image {
+  position: relative;
+  height: 260px;
+  overflow: hidden;
+}
+
+.ai-result-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.similarity-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 7px 10px;
+  background: #111;
+  color: #fff;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.ai-result-content {
+  padding: 18px;
+}
+
+.product-category {
+  color: var(--brown);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.ai-result-content h3 {
+  margin: 7px 0 8px;
+  font-family: var(--serif);
+  font-size: 23px;
+  font-weight: 500;
+}
+
+.ai-result-content p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.product-meta span {
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.match-bar {
+  height: 3px;
+  margin-top: 15px;
+  background: #eee;
+  overflow: hidden;
+}
+
+.match-bar-fill {
+  height: 100%;
+  background: var(--brown);
+  transition: width 0.6s ease;
+}
+
+.ai-result-content small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.retrieval-note {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--cream);
+}
+
+.retrieval-note div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.retrieval-note span {
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+
+.retrieval-note strong {
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.ai-loading {
+  padding: 30px;
+  text-align: center;
+}
+
+.ai-loading p {
+  margin: 12px 0 4px;
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.ai-loading small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.loading-dot {
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: 50%;
+  background: var(--brown);
+  animation: aiPulse 1s infinite ease-in-out;
+}
+
+@keyframes aiPulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 800px) {
+
+  .ai-results-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .retrieval-note {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 550px) {
+
+  .ai-results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-result-image {
+    height: 320px;
+  }
+
+}
