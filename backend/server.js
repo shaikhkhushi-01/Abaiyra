@@ -1,28 +1,24 @@
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import OpenAI from "openai";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import { pipeline } from "@huggingface/transformers";
 
 
 /* =========================================
-   ABAIRA AI BACKEND
+   ABAIRA AI — LOCAL SEMANTIC SEARCH
 ========================================= */
 
-dotenv.config();
-
-
-/* ================= SERVER ================= */
 
 const app = express();
 
-const PORT =
-  process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 
-/* ================= MIDDLEWARE ================= */
+/* =========================================
+   MIDDLEWARE
+========================================= */
 
 app.use(
   cors({
@@ -35,24 +31,9 @@ app.use(
 app.use(express.json());
 
 
-/* ================= OPENAI ================= */
-
-if (!process.env.OPENAI_API_KEY) {
-
-  console.warn(
-    "WARNING: OPENAI_API_KEY is not configured."
-  );
-
-}
-
-const openai =
-  new OpenAI({
-    apiKey:
-      process.env.OPENAI_API_KEY
-  });
-
-
-/* ================= FILE PATHS ================= */
+/* =========================================
+   PATH CONFIGURATION
+========================================= */
 
 const __filename =
   fileURLToPath(import.meta.url);
@@ -62,7 +43,7 @@ const __dirname =
 
 
 /*
-  Your products.json is here:
+  Repository structure:
 
   Abaiyra/
   ├── data/
@@ -70,9 +51,6 @@ const __dirname =
   │
   └── backend/
       └── server.js
-
-  Therefore we go one level up
-  from backend/ and then into data/.
 */
 
 const productsPath =
@@ -84,15 +62,25 @@ const productsPath =
   );
 
 
-/* ================= DATA ================= */
+/* =========================================
+   MODEL CONFIGURATION
+========================================= */
+
+const MODEL_NAME =
+  "Xenova/all-MiniLM-L6-v2";
+
+
+let extractor = null;
 
 let products = [];
 
 let productEmbeddings = [];
 
+let modelReady = false;
+
 
 /* =========================================
-   PRODUCT → SEARCHABLE TEXT
+   PRODUCT TEXT REPRESENTATION
 ========================================= */
 
 function productToText(product) {
@@ -124,12 +112,22 @@ function productToText(product) {
     `Description: ${product.description}`
 
   ]
-
     .join(". ")
-
     .replace(/\s+/g, " ")
-
     .trim();
+
+}
+
+
+/* =========================================
+   VECTOR → ARRAY
+========================================= */
+
+function tensorToArray(tensor) {
+
+  return Array.from(
+    tensor.data
+  );
 
 }
 
@@ -187,10 +185,31 @@ function cosineSimilarity(a, b) {
 
 
 /* =========================================
-   BUILD PRODUCT EMBEDDINGS
+   CREATE EMBEDDING
 ========================================= */
 
-async function buildProductEmbeddings() {
+async function createEmbedding(text) {
+
+  const output =
+    await extractor(
+      text,
+      {
+        pooling: "mean",
+        normalize: true
+      }
+    );
+
+
+  return tensorToArray(output);
+
+}
+
+
+/* =========================================
+   LOAD PRODUCTS
+========================================= */
+
+async function loadProducts() {
 
   console.log(
     "ABAIRA: loading product dataset..."
@@ -212,30 +231,52 @@ async function buildProductEmbeddings() {
     `ABAIRA: ${products.length} products loaded.`
   );
 
+}
 
-  if (!process.env.OPENAI_API_KEY) {
 
-    console.warn(
-      "ABAIRA: embeddings skipped because API key is missing."
-    );
+/* =========================================
+   LOAD AI MODEL
+========================================= */
 
-    return;
+async function loadModel() {
 
-  }
+  console.log(
+    "ABAIRA: loading local embedding model..."
+  );
 
 
   console.log(
-    "ABAIRA: generating semantic embeddings..."
+    `ABAIRA: model = ${MODEL_NAME}`
+  );
+
+
+  extractor =
+    await pipeline(
+      "feature-extraction",
+      MODEL_NAME
+    );
+
+
+  console.log(
+    "ABAIRA: embedding model ready."
+  );
+
+}
+
+
+/* =========================================
+   BUILD PRODUCT INDEX
+========================================= */
+
+async function buildProductIndex() {
+
+  console.log(
+    "ABAIRA: building semantic product index..."
   );
 
 
   productEmbeddings = [];
 
-
-  /*
-    Generate an embedding for every
-    ABAIRA product.
-  */
 
   for (
     const product of products
@@ -245,16 +286,15 @@ async function buildProductEmbeddings() {
       productToText(product);
 
 
-    const response =
-      await openai.embeddings.create({
+    console.log(
+      `ABAIRA: embedding ${product.name}`
+    );
 
-        model:
-          "text-embedding-3-small",
 
-        input:
-          searchableText
-
-      });
+    const embedding =
+      await createEmbedding(
+        searchableText
+      );
 
 
     productEmbeddings.push({
@@ -262,21 +302,15 @@ async function buildProductEmbeddings() {
       productId:
         product.id,
 
-      embedding:
-        response.data[0].embedding
+      embedding
 
     });
-
-
-    console.log(
-      `Embedded: ${product.name}`
-    );
 
   }
 
 
   console.log(
-    `ABAIRA: ${productEmbeddings.length} embeddings ready.`
+    `ABAIRA: ${productEmbeddings.length} product embeddings ready.`
   );
 
 }
@@ -295,15 +329,19 @@ app.get(
       status: "ok",
 
       service:
-        "ABAIRA AI Search",
+        "ABAIRA AI Semantic Search",
+
+      model:
+        MODEL_NAME,
 
       products:
         products.length,
 
-      embeddedProducts:
+      indexedProducts:
         productEmbeddings.length,
 
       semanticSearch:
+        modelReady &&
         productEmbeddings.length > 0
 
     });
@@ -313,7 +351,7 @@ app.get(
 
 
 /* =========================================
-   SEMANTIC SEARCH
+   SEMANTIC SEARCH API
 ========================================= */
 
 app.post(
@@ -326,7 +364,9 @@ app.post(
         req.body?.query?.trim();
 
 
-      /* ---------- VALIDATE QUERY ---------- */
+      /* -------------------------------
+         VALIDATE QUERY
+      -------------------------------- */
 
       if (!query) {
 
@@ -340,7 +380,28 @@ app.post(
       }
 
 
-      /* ---------- CHECK EMBEDDINGS ---------- */
+      /* -------------------------------
+         MODEL CHECK
+      -------------------------------- */
+
+      if (
+        !modelReady ||
+        !extractor
+      ) {
+
+        return res.status(503).json({
+
+          error:
+            "ABAIRA AI model is still loading. Please try again shortly."
+
+        });
+
+      }
+
+
+      /* -------------------------------
+         INDEX CHECK
+      -------------------------------- */
 
       if (
         !productEmbeddings.length
@@ -349,42 +410,33 @@ app.post(
         return res.status(503).json({
 
           error:
-            "Semantic search index is not ready."
+            "ABAIRA semantic index is not ready."
 
         });
 
       }
 
 
-      /*
-        Convert the user's natural-language
-        request into an embedding.
-      */
+      console.log(
+        `ABAIRA query: "${query}"`
+      );
 
-      const queryResponse =
-        await openai.embeddings.create({
 
-          model:
-            "text-embedding-3-small",
-
-          input:
-            query
-
-        });
-
+      /* -------------------------------
+         QUERY EMBEDDING
+      -------------------------------- */
 
       const queryEmbedding =
-        queryResponse
-          .data[0]
-          .embedding;
+        await createEmbedding(
+          query
+        );
 
 
-      /*
-        Compare the query against
-        every ABAIRA product.
-      */
+      /* -------------------------------
+         SEMANTIC RETRIEVAL
+      -------------------------------- */
 
-      const results =
+      const rankedResults =
         productEmbeddings
 
           .map(item => {
@@ -398,7 +450,9 @@ app.post(
 
 
             if (!product) {
+
               return null;
+
             }
 
 
@@ -413,49 +467,50 @@ app.post(
 
               ...product,
 
-              similarity
+              score:
+                Number(
+                  similarity.toFixed(4)
+                ),
+
+              matchScore:
+                Math.round(
+                  similarity * 100
+                )
 
             };
 
           })
 
-
           .filter(Boolean)
-
-
-          /*
-            Highest semantic similarity
-            comes first.
-          */
 
           .sort(
             (a, b) =>
-              b.similarity -
-              a.similarity
+              b.score -
+              a.score
           )
-
-
-          /*
-            We only return the top
-            three recommendations.
-          */
 
           .slice(0, 3);
 
 
-      /* ---------- RESPONSE ---------- */
+      /* -------------------------------
+         RESPONSE
+      -------------------------------- */
 
       res.json({
 
         query,
 
         retrievalMethod:
-          "embedding-based semantic search",
+          "local dense-vector semantic retrieval",
 
-        model:
-          "text-embedding-3-small",
+        embeddingModel:
+          MODEL_NAME,
 
-        results
+        resultCount:
+          rankedResults.length,
+
+        results:
+          rankedResults
 
       });
 
@@ -465,7 +520,7 @@ app.post(
     catch (error) {
 
       console.error(
-        "ABAIRA semantic search error:",
+        "ABAIRA search error:",
         error
       );
 
@@ -491,8 +546,36 @@ async function startServer() {
 
   try {
 
-    await buildProductEmbeddings();
+    /*
+      Step 1:
+      Load products
+    */
 
+    await loadProducts();
+
+
+    /*
+      Step 2:
+      Load local AI model
+    */
+
+    await loadModel();
+
+    modelReady = true;
+
+
+    /*
+      Step 3:
+      Create product embeddings
+    */
+
+    await buildProductIndex();
+
+
+    /*
+      Step 4:
+      Start HTTP server
+    */
 
     app.listen(
       PORT,
@@ -500,6 +583,10 @@ async function startServer() {
 
         console.log(
           `ABAIRA AI server running on port ${PORT}`
+        );
+
+        console.log(
+          "ABAIRA: semantic search is ONLINE."
         );
 
       }
