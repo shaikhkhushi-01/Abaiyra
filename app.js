@@ -246,28 +246,20 @@ async function runAISearch() {
       The API key NEVER lives here.
     */
 
-    const response =
-      await fetch(
-        "http://localhost:3000/api/search",
-        {
+    const response = await fetch(
+  "https://abaira-ai-backend.onrender.com/api/search",
+  {
+    method: "POST",
 
-          method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
 
-          headers: {
-
-            "Content-Type":
-              "application/json"
-
-          },
-
-          body: JSON.stringify({
-
-            query: query
-
-          })
-
-        }
-      );
+    body: JSON.stringify({
+      query
+    })
+  }
+);
 
 
     const data =
@@ -288,40 +280,144 @@ async function runAISearch() {
 
     /* ---------- RENDER RESULTS ---------- */
 
-    renderSemanticResults(
-      data.results,
-      data.query
-    );
+    function renderSemanticResults(results, query) {
 
-  }
-
-
-  catch (error) {
-
-    console.error(
-      "ABAIRA AI Search Error:",
-      error
-    );
-
+  if (!results || !results.length) {
 
     aiResult.innerHTML = `
 
       <div class="no-result">
 
         <strong>
-          ABAIRA AI is currently unavailable.
+          No close semantic match found.
         </strong>
 
         <p>
-          Please make sure the ABAIRA AI
-          backend is running on port 3000.
+          Try describing the occasion, style,
+          color, comfort or overall look.
         </p>
 
       </div>
 
     `;
 
+    return;
+
   }
+
+
+  const topResults =
+    results.slice(0, 3);
+
+
+  aiResult.innerHTML = `
+
+    <div class="search-heading">
+
+      <div>
+
+        <strong>
+          ABAIRA AI Discovery
+        </strong>
+
+        <p>
+          Semantic matches for
+          "${escapeHTML(query)}"
+        </p>
+
+      </div>
+
+      <span>
+        ${topResults.length} matches
+      </span>
+
+    </div>
+
+
+    <div class="ai-results-grid">
+
+      ${topResults.map(product => `
+
+        <article class="ai-result-card">
+
+          <div class="ai-result-image">
+
+            <img
+              src="${product.image}"
+              alt="${escapeHTML(product.name)}"
+              loading="lazy"
+            >
+
+          </div>
+
+
+          <div class="ai-result-content">
+
+            <span class="ai-category">
+
+              ${escapeHTML(product.category)}
+
+            </span>
+
+
+            <h3>
+
+              ${escapeHTML(product.name)}
+
+            </h3>
+
+
+            <p>
+
+              ${escapeHTML(product.description)}
+
+            </p>
+
+
+            <div class="match-score">
+
+              <span>
+                Semantic match
+              </span>
+
+              <strong>
+                ${product.matchScore}%
+              </strong>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      `).join("")}
+
+    </div>
+
+
+    <div class="retrieval-note">
+
+      <span>
+        AI Retrieval Engine
+      </span>
+
+      <strong>
+        Dense-vector semantic search
+      </strong>
+
+      <br>
+
+      <span>
+        Embedding model
+      </span>
+
+      <strong>
+        Xenova/all-MiniLM-L6-v2
+      </strong>
+
+    </div>
+
+  `;
 
 }
 
