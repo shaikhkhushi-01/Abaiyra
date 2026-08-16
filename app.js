@@ -1,7 +1,14 @@
 /* =========================================
    ABAIRA AI STUDIO
-   Semantic Search Frontend
+   Phase 1: Semantic Search
+   Phase 2: AI Stylist
 ========================================= */
+
+
+/* ================= CONFIGURATION ================= */
+
+const API_BASE_URL =
+  "https://abaira-ai-backend.onrender.com";
 
 
 /* ================= DOM ELEMENTS ================= */
@@ -26,6 +33,39 @@ const aiRun =
 
 const aiResult =
   document.getElementById("aiResult");
+
+
+/* ================= AI STYLIST ELEMENTS ================= */
+
+const stylistForm =
+  document.getElementById("stylistForm");
+
+const stylistRun =
+  document.getElementById("stylistRun");
+
+const stylistOccasion =
+  document.getElementById("stylistOccasion");
+
+const stylistStyle =
+  document.getElementById("stylistStyle");
+
+const stylistComfort =
+  document.getElementById("stylistComfort");
+
+const stylistColor =
+  document.getElementById("stylistColor");
+
+const stylistCoverage =
+  document.getElementById("stylistCoverage");
+
+const stylistDescription =
+  document.getElementById("stylistDescription");
+
+
+/* ================= SEMANTIC SEARCH FORM ================= */
+
+const semanticSearchForm =
+  document.getElementById("semanticSearchForm");
 
 
 /* ================= MOBILE MENU ================= */
@@ -57,10 +97,7 @@ const aiConcepts = {
     title: "Semantic Search",
 
     description:
-      "Describe the kind of burqa you are looking for. ABAIRA converts your natural-language query into an embedding and retrieves the most semantically relevant designs.",
-
-    placeholder:
-      "e.g. elegant black burqa for an evening event"
+      "Describe the kind of burqa you are looking for. ABAIRA converts your natural-language request into an embedding and retrieves the most semantically relevant designs."
 
   },
 
@@ -70,10 +107,7 @@ const aiConcepts = {
     title: "AI Stylist",
 
     description:
-      "Describe your occasion, comfort preferences and style. ABAIRA will rank the collection according to your requirements.",
-
-    placeholder:
-      "e.g. comfortable and elegant burqa for a wedding"
+      "Tell ABAIRA about your occasion, style, comfort, colour and coverage preferences. Our recommendation engine will rank the collection around your requirements."
 
   },
 
@@ -83,14 +117,17 @@ const aiConcepts = {
     title: "Visual Discovery",
 
     description:
-      "Describe the visual characteristics of the design you want. Image-based retrieval will be added in the computer-vision stage.",
-
-    placeholder:
-      "e.g. flowing dark minimalist design"
+      "Describe the visual characteristics of the design you want. ABAIRA will prepare the request for the visual discovery stage."
 
   }
 
 };
+
+
+/* ================= CURRENT AI MODE ================= */
+
+let currentAIMode =
+  "search";
 
 
 /* ================= OPEN AI MODAL ================= */
@@ -108,27 +145,53 @@ document
         aiConcepts[type];
 
 
-      if (!concept) {
+      if (!concept || !modal) {
+
         return;
+
       }
 
 
-      modalTitle.textContent =
-        concept.title;
+      currentAIMode =
+        type;
 
 
-      modalDescription.textContent =
-        concept.description;
+      /* ---------- HEADER ---------- */
+
+      if (modalTitle) {
+
+        modalTitle.textContent =
+          concept.title;
+
+      }
 
 
-      aiInput.placeholder =
-        concept.placeholder;
+      if (modalDescription) {
+
+        modalDescription.textContent =
+          concept.description;
+
+      }
 
 
-      aiInput.value = "";
+      /* ---------- RESET ---------- */
+
+      resetAIInterface();
 
 
-      aiResult.innerHTML = "";
+      /* ---------- MODE ---------- */
+
+      if (type === "stylist") {
+
+        showStylistMode();
+
+      }
+
+      else {
+
+        showSemanticMode(type);
+
+      }
 
 
       modal.classList.add("show");
@@ -138,13 +201,145 @@ document
   });
 
 
+/* ================= RESET AI INTERFACE ================= */
+
+function resetAIInterface() {
+
+  if (aiResult) {
+
+    aiResult.innerHTML = "";
+
+  }
+
+
+  if (aiInput) {
+
+    aiInput.value = "";
+
+  }
+
+
+  if (stylistOccasion) {
+
+    stylistOccasion.value = "";
+
+  }
+
+
+  if (stylistStyle) {
+
+    stylistStyle.value = "";
+
+  }
+
+
+  if (stylistComfort) {
+
+    stylistComfort.value = "";
+
+  }
+
+
+  if (stylistColor) {
+
+    stylistColor.value = "";
+
+  }
+
+
+  if (stylistCoverage) {
+
+    stylistCoverage.value = "";
+
+  }
+
+
+  if (stylistDescription) {
+
+    stylistDescription.value = "";
+
+  }
+
+}
+
+
+/* ================= SHOW STYLIST ================= */
+
+function showStylistMode() {
+
+  if (stylistForm) {
+
+    stylistForm.style.display =
+      "block";
+
+  }
+
+
+  if (semanticSearchForm) {
+
+    semanticSearchForm.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* ================= SHOW SEMANTIC SEARCH ================= */
+
+function showSemanticMode(type) {
+
+  if (stylistForm) {
+
+    stylistForm.style.display =
+      "none";
+
+  }
+
+
+  if (semanticSearchForm) {
+
+    semanticSearchForm.style.display =
+      "block";
+
+  }
+
+
+  if (!aiInput) {
+
+    return;
+
+  }
+
+
+  if (type === "visual") {
+
+    aiInput.placeholder =
+      "e.g. flowing dark minimalist design";
+
+  }
+
+  else {
+
+    aiInput.placeholder =
+      "e.g. elegant black burqa for an evening event";
+
+  }
+
+}
+
+
 /* ================= CLOSE AI MODAL ================= */
 
 if (modalClose) {
 
   modalClose.addEventListener("click", () => {
 
-    modal.classList.remove("show");
+    if (modal) {
+
+      modal.classList.remove("show");
+
+    }
 
   });
 
@@ -181,9 +376,22 @@ document.addEventListener("keydown", event => {
 });
 
 
-/* ================= AI SEARCH ================= */
+/* =========================================
+   PHASE 1
+   SEMANTIC SEARCH
+========================================= */
+
+
+/* ================= RUN SEMANTIC SEARCH ================= */
 
 async function runAISearch() {
+
+  if (!aiInput || !aiResult) {
+
+    return;
+
+  }
+
 
   const query =
     aiInput.value.trim();
@@ -214,59 +422,43 @@ async function runAISearch() {
   }
 
 
-  /* ---------- LOADING STATE ---------- */
+  /* ---------- LOADING ---------- */
 
-  aiResult.innerHTML = `
-
-    <div class="ai-loading">
-
-      <div class="loading-dot"></div>
-
-      <p>
-        Understanding your request...
-      </p>
-
-      <small>
-        Searching the ABAIRA semantic index
-      </small>
-
-    </div>
-
-  `;
+  showLoading(
+    "Understanding your request...",
+    "Searching the ABAIRA semantic index"
+  );
 
 
   try {
 
-    /*
-      IMPORTANT:
+    const response =
+      await fetch(
+        `${API_BASE_URL}/api/search`,
+        {
 
-      The frontend sends the query
-      to our backend.
+          method: "POST",
 
-      The API key NEVER lives here.
-    */
+          headers: {
 
-    const response = await fetch(
-  "https://abaira-ai-backend.onrender.com/api/search",
-  {
-    method: "POST",
+            "Content-Type":
+              "application/json"
 
-    headers: {
-      "Content-Type": "application/json"
-    },
+          },
 
-    body: JSON.stringify({
-      query
-    })
-  }
-);
+          body: JSON.stringify({
+
+            query
+
+          })
+
+        }
+      );
 
 
     const data =
       await response.json();
 
-
-    /* ---------- API ERROR ---------- */
 
     if (!response.ok) {
 
@@ -278,178 +470,28 @@ async function runAISearch() {
     }
 
 
-    /* ---------- RENDER RESULTS ---------- */
-
-    function renderSemanticResults(results, query) {
-
-  if (!results || !results.length) {
-
-    aiResult.innerHTML = `
-
-      <div class="no-result">
-
-        <strong>
-          No close semantic match found.
-        </strong>
-
-        <p>
-          Try describing the occasion, style,
-          color, comfort or overall look.
-        </p>
-
-      </div>
-
-    `;
-
-    return;
+    renderSemanticResults(
+      data.results || [],
+      query
+    );
 
   }
 
 
-  const topResults =
-    results.slice(0, 3);
+  catch (error) {
+
+    console.error(
+      "ABAIRA semantic search error:",
+      error
+    );
 
 
-  aiResult.innerHTML = `
+    renderAPIError(
+      "Semantic search unavailable",
+      "The ABAIRA AI backend could not complete the search. Please try again."
+    );
 
-    <div class="search-heading">
-
-      <div>
-
-        <strong>
-          ABAIRA AI Discovery
-        </strong>
-
-        <p>
-          Semantic matches for
-          "${escapeHTML(query)}"
-        </p>
-
-      </div>
-
-      <span>
-        ${topResults.length} matches
-      </span>
-
-    </div>
-
-
-    <div class="ai-results-grid">
-
-      ${topResults.map(product => `
-
-        <article class="ai-result-card">
-
-          <div class="ai-result-image">
-
-            <img
-              src="${product.image}"
-              alt="${escapeHTML(product.name)}"
-              loading="lazy"
-            >
-
-          </div>
-
-
-          <div class="ai-result-content">
-
-            <span class="ai-category">
-
-              ${escapeHTML(product.category)}
-
-            </span>
-
-
-            <h3>
-
-              ${escapeHTML(product.name)}
-
-            </h3>
-
-
-            <p>
-
-              ${escapeHTML(product.description)}
-
-            </p>
-
-
-            <div class="match-score">
-
-              <span>
-                Semantic match
-              </span>
-
-              <strong>
-                ${product.matchScore}%
-              </strong>
-
-            </div>
-
-          </div>
-
-        </article>
-
-      `).join("")}
-
-    </div>
-
-
-    <div class="retrieval-note">
-
-      <span>
-        AI Retrieval Engine
-      </span>
-
-      <strong>
-        Dense-vector semantic search
-      </strong>
-
-      <br>
-
-      <span>
-        Embedding model
-      </span>
-
-      <strong>
-        Xenova/all-MiniLM-L6-v2
-      </strong>
-
-    </div>
-
-  `;
-
-}
-
-
-/* ================= SEARCH BUTTON ================= */
-
-if (aiRun) {
-
-  aiRun.addEventListener(
-    "click",
-    runAISearch
-  );
-
-}
-
-
-/* ================= ENTER KEY ================= */
-
-if (aiInput) {
-
-  aiInput.addEventListener(
-    "keydown",
-    event => {
-
-      if (event.key === "Enter") {
-
-        runAISearch();
-
-      }
-
-    }
-  );
+  }
 
 }
 
@@ -461,9 +503,7 @@ function renderSemanticResults(
   query
 ) {
 
-  /* ---------- NO RESULTS ---------- */
-
-  if (!results || !results.length) {
+  if (!results.length) {
 
     aiResult.innerHTML = `
 
@@ -486,11 +526,6 @@ function renderSemanticResults(
 
   }
 
-
-  /*
-    We only show the top 3
-    semantically ranked products.
-  */
 
   const topResults =
     results.slice(0, 3);
@@ -557,6 +592,19 @@ function renderSemanticResults(
 
       </div>
 
+
+      <div>
+
+        <span>
+          EMBEDDING MODEL
+        </span>
+
+        <strong>
+          Xenova/all-MiniLM-L6-v2
+        </strong>
+
+      </div>
+
     </div>
 
   `;
@@ -564,52 +612,441 @@ function renderSemanticResults(
 }
 
 
-/* ================= PRODUCT CARD ================= */
-
-function createProductCard(product) {
-
-  /*
-    Convert similarity score into
-    a readable percentage.
-
-    We clamp it between 0 and 100
-    for safe UI rendering.
-  */
-
-  const rawScore =
-    Number(product.similarity) || 0;
+/* =========================================
+   PHASE 2
+   AI STYLIST
+========================================= */
 
 
-  const similarity =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        Math.round(rawScore * 100)
-      )
+/* ================= RUN AI STYLIST ================= */
+
+async function runAIStylist() {
+
+  if (!aiResult) {
+
+    return;
+
+  }
+
+
+  /* ---------- COLLECT USER PREFERENCES ---------- */
+
+  const occasion =
+    stylistOccasion
+      ? stylistOccasion.value.trim()
+      : "";
+
+
+  const style =
+    stylistStyle
+      ? stylistStyle.value.trim()
+      : "";
+
+
+  const comfort =
+    stylistComfort
+      ? stylistComfort.value.trim()
+      : "";
+
+
+  const color =
+    stylistColor
+      ? stylistColor.value.trim()
+      : "";
+
+
+  const coverage =
+    stylistCoverage
+      ? stylistCoverage.value.trim()
+      : "";
+
+
+  const description =
+    stylistDescription
+      ? stylistDescription.value.trim()
+      : "";
+
+
+  /* ---------- VALIDATION ---------- */
+
+  if (
+    !occasion &&
+    !style &&
+    !comfort &&
+    !color &&
+    !coverage &&
+    !description
+  ) {
+
+    aiResult.innerHTML = `
+
+      <div class="no-result">
+
+        <strong>
+          Tell ABAIRA a little about your style.
+        </strong>
+
+        <p>
+          Choose at least one preference
+          or describe what you're looking for.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  /* ---------- LOADING ---------- */
+
+  showLoading(
+    "ABAIRA is styling your request...",
+    "Combining semantic relevance with your preferences"
+  );
+
+
+  /* ---------- REQUEST PAYLOAD ---------- */
+
+  const payload = {
+
+    occasion,
+
+    style,
+
+    comfort,
+
+    color,
+
+    coverage,
+
+    description
+
+  };
+
+
+  console.log(
+    "ABAIRA AI Stylist request:",
+    payload
+  );
+
+
+  try {
+
+    const response =
+      await fetch(
+        `${API_BASE_URL}/api/stylist`,
+        {
+
+          method: "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json"
+
+          },
+
+          body:
+            JSON.stringify(payload)
+
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "AI Stylist request failed."
+      );
+
+    }
+
+
+    console.log(
+      "ABAIRA AI Stylist response:",
+      data
+    );
+
+
+    renderStylistResults(
+      data,
+      payload
+    );
+
+  }
+
+
+  catch (error) {
+
+    console.error(
+      "ABAIRA AI Stylist error:",
+      error
+    );
+
+
+    renderAPIError(
+      "AI Stylist unavailable",
+      "The recommendation service could not complete this request. Please make sure the ABAIRA backend is running correctly."
+    );
+
+  }
+
+}
+
+
+/* ================= RENDER AI STYLIST RESULTS ================= */
+
+function renderStylistResults(
+  data,
+  preferences
+) {
+
+  const results =
+    Array.isArray(data.results)
+      ? data.results
+      : Array.isArray(data.recommendations)
+        ? data.recommendations
+        : [];
+
+
+  if (!results.length) {
+
+    aiResult.innerHTML = `
+
+      <div class="no-result">
+
+        <strong>
+          ABAIRA couldn't find a close recommendation.
+        </strong>
+
+        <p>
+          Try changing the occasion,
+          style or comfort preference.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  const topResults =
+    results.slice(0, 3);
+
+
+  aiResult.innerHTML = `
+
+    <div class="search-heading">
+
+      <div>
+
+        <strong>
+          ABAIRA AI Stylist
+        </strong>
+
+        <p>
+          Your collection, ranked around your preferences
+        </p>
+
+      </div>
+
+      <span>
+        ${topResults.length} recommendations
+      </span>
+
+    </div>
+
+
+    <div class="stylist-preference-summary">
+
+      ${createPreferencePill(
+        "Occasion",
+        preferences.occasion
+      )}
+
+      ${createPreferencePill(
+        "Style",
+        preferences.style
+      )}
+
+      ${createPreferencePill(
+        "Comfort",
+        preferences.comfort
+      )}
+
+      ${createPreferencePill(
+        "Colour",
+        preferences.color
+      )}
+
+      ${createPreferencePill(
+        "Coverage",
+        preferences.coverage
+      )}
+
+    </div>
+
+
+    <div class="ai-results-grid">
+
+      ${topResults
+        .map(product =>
+          createStylistCard(
+            product,
+            preferences
+          )
+        )
+        .join("")}
+
+    </div>
+
+
+    <div class="retrieval-note">
+
+      <div>
+
+        <span>
+          RECOMMENDATION METHOD
+        </span>
+
+        <strong>
+          Hybrid AI ranking
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          SEMANTIC ENGINE
+        </span>
+
+        <strong>
+          Xenova/all-MiniLM-L6-v2
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          RESULTS
+        </span>
+
+        <strong>
+          Top ${topResults.length} personalised matches
+        </strong>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ================= STYLIST PRODUCT CARD ================= */
+
+function createStylistCard(
+  product,
+  preferences
+) {
+
+  const match =
+    getProductMatchScore(product);
+
+
+  const semantic =
+    getPercentage(
+      product.semanticScore ??
+      product.similarity ??
+      product.semanticSimilarity
+    );
+
+
+  const attribute =
+    getPercentage(
+      product.attributeScore ??
+      product.preferenceScore ??
+      product.preferenceMatch
+    );
+
+
+  const occasionMatch =
+    getPercentage(
+      product.occasionScore ??
+      product.occasionMatch
+    );
+
+
+  const styleMatch =
+    getPercentage(
+      product.styleScore ??
+      product.styleMatch
+    );
+
+
+  const comfortMatch =
+    getPercentage(
+      product.comfortScore ??
+      product.comfortMatch
+    );
+
+
+  const colorMatch =
+    getPercentage(
+      product.colorScore ??
+      product.colourScore ??
+      product.colorMatch
+    );
+
+
+  const explanation =
+    getRecommendationExplanation(
+      product,
+      preferences
     );
 
 
   return `
 
     <article
-      class="ai-result-card"
+      class="ai-result-card stylist-result-card"
       data-product-id="${escapeHTML(
-        product.id
+        product.id || ""
       )}"
     >
 
       <div class="ai-result-image">
 
         <img
-          src="${escapeHTML(product.image)}"
-          alt="${escapeHTML(product.name)}"
+          src="${escapeHTML(
+            product.image || ""
+          )}"
+          alt="${escapeHTML(
+            product.name || "ABAIRA design"
+          )}"
           loading="lazy"
         >
 
+
         <div class="similarity-badge">
 
-          ${similarity}% match
+          ${match}% match
 
         </div>
 
@@ -621,7 +1058,7 @@ function createProductCard(product) {
         <span class="product-category">
 
           ${escapeHTML(
-            product.category
+            product.category || "ABAIRA"
           )}
 
         </span>
@@ -630,7 +1067,7 @@ function createProductCard(product) {
         <h3>
 
           ${escapeHTML(
-            product.name
+            product.name || "ABAIRA Design"
           )}
 
         </h3>
@@ -639,50 +1076,114 @@ function createProductCard(product) {
         <p>
 
           ${escapeHTML(
-            product.description
+            product.description || ""
           )}
 
         </p>
 
 
-        <div class="product-meta">
+        <!-- MATCH BREAKDOWN -->
 
-          <span>
+        <div class="ai-match-breakdown">
 
-            ${escapeHTML(
-              product.color
-            )}
+          ${createScoreRow(
+            "Semantic relevance",
+            semantic
+          )}
 
-          </span>
+          ${createScoreRow(
+            "Preference match",
+            attribute
+          )}
 
+          ${createScoreRow(
+            "Occasion",
+            occasionMatch
+          )}
 
-          <span>
+          ${createScoreRow(
+            "Style",
+            styleMatch
+          )}
 
-            ${escapeHTML(
-              product.comfort
-            )}
-            comfort
+          ${createScoreRow(
+            "Comfort",
+            comfortMatch
+          )}
 
-          </span>
-
-
-          <span>
-
-            ${escapeHTML(
-              product.coverage
-            )}
-            coverage
-
-          </span>
+          ${createScoreRow(
+            "Colour",
+            colorMatch
+          )}
 
         </div>
 
+
+        <!-- WHY ABAIRA -->
+
+        <div class="recommendation-reason">
+
+          <strong>
+            WHY ABAIRA RECOMMENDS IT
+          </strong>
+
+          <p>
+            ${escapeHTML(
+              explanation
+            )}
+          </p>
+
+        </div>
+
+
+        <!-- PRODUCT META -->
+
+        <div class="product-meta">
+
+          ${
+            product.color
+              ? `
+                <span>
+                  ${escapeHTML(product.color)}
+                </span>
+              `
+              : ""
+          }
+
+
+          ${
+            product.comfort
+              ? `
+                <span>
+                  ${escapeHTML(product.comfort)}
+                  comfort
+                </span>
+              `
+              : ""
+          }
+
+
+          ${
+            product.coverage
+              ? `
+                <span>
+                  ${escapeHTML(product.coverage)}
+                  coverage
+                </span>
+              `
+              : ""
+          }
+
+        </div>
+
+
+        <!-- MAIN MATCH BAR -->
 
         <div class="match-bar">
 
           <div
             class="match-bar-fill"
-            style="width:${similarity}%"
+            style="width:${match}%"
           ></div>
 
         </div>
@@ -690,8 +1191,8 @@ function createProductCard(product) {
 
         <small>
 
-          Semantic similarity:
-          ${similarity}%
+          Overall recommendation:
+          ${match}%
 
         </small>
 
@@ -704,11 +1205,529 @@ function createProductCard(product) {
 }
 
 
+/* ================= SCORE ROW ================= */
+
+function createScoreRow(
+  label,
+  score
+) {
+
+  if (score === null) {
+
+    return "";
+
+  }
+
+
+  return `
+
+    <div class="score-row">
+
+      <span>
+        ${escapeHTML(label)}
+      </span>
+
+      <strong>
+        ${score}%
+      </strong>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ================= PREFERENCE PILL ================= */
+
+function createPreferencePill(
+  label,
+  value
+) {
+
+  if (!value) {
+
+    return "";
+
+  }
+
+
+  return `
+
+    <span class="preference-pill">
+
+      <small>
+        ${escapeHTML(label)}
+      </small>
+
+      ${escapeHTML(
+        formatPreference(value)
+      )}
+
+    </span>
+
+  `;
+
+}
+
+
+/* ================= FORMAT PREFERENCE ================= */
+
+function formatPreference(value) {
+
+  return String(value)
+
+    .replace(
+      /-/g,
+      " "
+    )
+
+    .replace(
+      /\b\w/g,
+      letter =>
+        letter.toUpperCase()
+    );
+
+}
+
+
+/* ================= GET MATCH SCORE ================= */
+
+function getProductMatchScore(product) {
+
+  const possibleScores = [
+
+    product.matchScore,
+
+    product.overallScore,
+
+    product.recommendationScore,
+
+    product.score,
+
+    product.finalScore
+
+  ];
+
+
+  for (
+    const score of possibleScores
+  ) {
+
+    const percentage =
+      getPercentage(score);
+
+
+    if (
+      percentage !== null
+    ) {
+
+      return percentage;
+
+    }
+
+  }
+
+
+  /* ---------- FALLBACK ---------- */
+
+  const semantic =
+    getPercentage(
+      product.similarity
+    );
+
+
+  if (semantic !== null) {
+
+    return semantic;
+
+  }
+
+
+  return 0;
+
+}
+
+
+/* ================= SCORE NORMALIZER ================= */
+
+function getPercentage(value) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return null;
+
+  }
+
+
+  const number =
+    Number(value);
+
+
+  if (
+    Number.isNaN(number)
+  ) {
+
+    return null;
+
+  }
+
+
+  /*
+    If backend gives:
+
+    0.87 -> 87%
+    87   -> 87%
+
+  */
+
+  const percentage =
+    number <= 1
+      ? number * 100
+      : number;
+
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        percentage
+      )
+    )
+  );
+
+}
+
+
+/* ================= RECOMMENDATION EXPLANATION ================= */
+
+function getRecommendationExplanation(
+  product,
+  preferences
+) {
+
+  /*
+    Prefer backend-generated explanation
+    if available.
+  */
+
+  if (
+    product.explanation
+  ) {
+
+    return String(
+      product.explanation
+    );
+
+  }
+
+
+  if (
+    product.reason
+  ) {
+
+    return String(
+      product.reason
+    );
+
+  }
+
+
+  if (
+    product.why
+  ) {
+
+    return String(
+      product.why
+    );
+
+  }
+
+
+  /*
+    Frontend fallback explanation.
+    This is not pretending to be an LLM explanation;
+    it simply reflects the selected attributes.
+  */
+
+  const reasons = [];
+
+
+  const occasionMatch =
+    Array.isArray(product.occasion) &&
+    preferences.occasion &&
+    product.occasion
+      .map(String)
+      .includes(
+        String(
+          preferences.occasion
+        )
+      );
+
+
+  const styleMatch =
+    Array.isArray(product.style) &&
+    preferences.style &&
+    product.style
+      .map(String)
+      .includes(
+        String(
+          preferences.style
+        )
+      );
+
+
+  const comfortMatch =
+    preferences.comfort &&
+    product.comfort &&
+    String(
+      product.comfort
+    ) === String(
+      preferences.comfort
+    );
+
+
+  const colorMatch =
+    preferences.color &&
+    product.color &&
+    String(
+      product.color
+    ) === String(
+      preferences.color
+    );
+
+
+  if (occasionMatch) {
+
+    reasons.push(
+      `matches your ${formatPreference(
+        preferences.occasion
+      )} occasion`
+    );
+
+  }
+
+
+  if (styleMatch) {
+
+    reasons.push(
+      `matches your ${formatPreference(
+        preferences.style
+      )} style preference`
+    );
+
+  }
+
+
+  if (comfortMatch) {
+
+    reasons.push(
+      `matches your ${formatPreference(
+        preferences.comfort
+      )} comfort preference`
+    );
+
+  }
+
+
+  if (colorMatch) {
+
+    reasons.push(
+      `matches your ${formatPreference(
+        preferences.color
+      )} colour preference`
+    );
+
+  }
+
+
+  if (!reasons.length) {
+
+    return "This design was ranked highly by ABAIRA's recommendation engine based on the overall similarity between your request and the collection.";
+
+  }
+
+
+  return `This design ${joinReasons(
+    reasons
+  )}.`;
+
+}
+
+
+/* ================= JOIN REASONS ================= */
+
+function joinReasons(
+  reasons
+) {
+
+  if (reasons.length === 1) {
+
+    return reasons[0];
+
+  }
+
+
+  if (reasons.length === 2) {
+
+    return `${reasons[0]} and ${reasons[1]}`;
+
+  }
+
+
+  return `${reasons
+    .slice(0, -1)
+    .join(", ")}, and ${reasons[
+      reasons.length - 1
+    ]}`;
+
+}
+
+
+/* =========================================
+   LOADING + ERROR UI
+========================================= */
+
+
+/* ================= LOADING ================= */
+
+function showLoading(
+  title,
+  description
+) {
+
+  if (!aiResult) {
+
+    return;
+
+  }
+
+
+  aiResult.innerHTML = `
+
+    <div class="ai-loading">
+
+      <div class="loading-dot"></div>
+
+      <p>
+        ${escapeHTML(title)}
+      </p>
+
+      <small>
+        ${escapeHTML(description)}
+      </small>
+
+    </div>
+
+  `;
+
+}
+
+
+/* ================= API ERROR ================= */
+
+function renderAPIError(
+  title,
+  message
+) {
+
+  if (!aiResult) {
+
+    return;
+
+  }
+
+
+  aiResult.innerHTML = `
+
+    <div class="no-result">
+
+      <strong>
+        ${escapeHTML(title)}
+      </strong>
+
+      <p>
+        ${escapeHTML(message)}
+      </p>
+
+      <small>
+        Please try again in a moment.
+      </small>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================
+   BUTTON EVENTS
+========================================= */
+
+
+/* ================= SEMANTIC SEARCH BUTTON ================= */
+
+if (aiRun) {
+
+  aiRun.addEventListener(
+    "click",
+    runAISearch
+  );
+
+}
+
+
+/* ================= SEMANTIC ENTER KEY ================= */
+
+if (aiInput) {
+
+  aiInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter"
+      ) {
+
+        event.preventDefault();
+
+        runAISearch();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* ================= AI STYLIST BUTTON ================= */
+
+if (stylistRun) {
+
+  stylistRun.addEventListener(
+    "click",
+    runAIStylist
+  );
+
+}
+
+
 /* ================= HTML ESCAPE ================= */
 
-function escapeHTML(text) {
+function escapeHTML(
+  text
+) {
 
-  return String(text)
+  return String(
+    text ?? ""
+  )
 
     .replace(
       /&/g,
@@ -736,3 +1755,20 @@ function escapeHTML(text) {
     );
 
 }
+
+
+/* =========================================
+   ABAIRA READY
+========================================= */
+
+console.log(
+  "ABAIRA AI Studio initialized."
+);
+
+console.log(
+  "Semantic Search: ACTIVE"
+);
+
+console.log(
+  "AI Stylist: ACTIVE"
+);
