@@ -697,56 +697,316 @@
 
   <!-- ================= AI MODAL ================= -->
 
-  <div
-    class="ai-modal"
-    id="aiModal"
-  >
+  <!-- ================= AI MODAL ================= -->
 
-    <div class="modal-box">
+<div class="ai-modal" id="aiModal">
 
-      <button
-        class="modal-close"
-        id="modalClose"
-      >
-        ×
-      </button>
+  <div class="ai-modal-card">
 
-      <p class="eyebrow">
-        ABAIRA AI STUDIO / PROTOTYPE
-      </p>
+    <!-- Close -->
+    <button
+      class="ai-modal-close"
+      id="modalClose"
+      type="button"
+      aria-label="Close"
+    >
+      ×
+    </button>
+
+
+    <!-- Header -->
+    <div class="ai-modal-header">
+
+      <span class="ai-modal-eyebrow">
+        ABAIRA INTELLIGENCE
+      </span>
 
       <h2 id="modalTitle">
-        Intelligent Discovery
+        AI Stylist
       </h2>
 
       <p id="modalDescription">
-        Explore the future concept.
+        Tell ABAIRA what you're looking for and
+        discover the designs that best match you.
       </p>
 
+    </div>
 
-      <div class="ai-input">
 
-        <input
-          id="aiInput"
-          type="text"
-          placeholder="Describe the burqa you are looking for..."
-        >
+    <!-- ================= AI STYLIST FORM ================= -->
 
-        <button id="aiRun">
-          Explore
-        </button>
+    <div
+      class="stylist-form"
+      id="stylistForm"
+    >
+
+      <!-- Occasion -->
+
+      <div class="stylist-field">
+
+        <label for="stylistOccasion">
+          What are you dressing for?
+        </label>
+
+        <select id="stylistOccasion">
+
+          <option value="">
+            Select an occasion
+          </option>
+
+          <option value="wedding">
+            Wedding
+          </option>
+
+          <option value="party">
+            Party
+          </option>
+
+          <option value="evening">
+            Evening
+          </option>
+
+          <option value="formal">
+            Formal
+          </option>
+
+          <option value="everyday">
+            Everyday
+          </option>
+
+          <option value="travel">
+            Travel
+          </option>
+
+          <option value="work">
+            Work
+          </option>
+
+        </select>
 
       </div>
 
 
-      <div
-        class="ai-result"
-        id="aiResult"
-      ></div>
+      <!-- Style -->
+
+      <div class="stylist-field">
+
+        <label for="stylistStyle">
+          Preferred style
+        </label>
+
+        <select id="stylistStyle">
+
+          <option value="">
+            Select a style
+          </option>
+
+          <option value="elegant">
+            Elegant
+          </option>
+
+          <option value="minimal">
+            Minimal
+          </option>
+
+          <option value="classic">
+            Classic
+          </option>
+
+          <option value="contemporary">
+            Contemporary
+          </option>
+
+          <option value="flowing">
+            Flowing
+          </option>
+
+          <option value="statement">
+            Statement
+          </option>
+
+          <option value="comfortable">
+            Comfortable
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- Comfort -->
+
+      <div class="stylist-field">
+
+        <label for="stylistComfort">
+          Comfort level
+        </label>
+
+        <select id="stylistComfort">
+
+          <option value="">
+            Select comfort level
+          </option>
+
+          <option value="low">
+            Light
+          </option>
+
+          <option value="medium">
+            Medium
+          </option>
+
+          <option value="high">
+            High
+          </option>
+
+          <option value="very-high">
+            Very High
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- Color -->
+
+      <div class="stylist-field">
+
+        <label for="stylistColor">
+          Preferred color
+        </label>
+
+        <select id="stylistColor">
+
+          <option value="">
+            Any color
+          </option>
+
+          <option value="black">
+            Black
+          </option>
+
+          <option value="dark">
+            Dark
+          </option>
+
+          <option value="neutral">
+            Neutral
+          </option>
+
+          <option value="brown">
+            Brown
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- Coverage -->
+
+      <div class="stylist-field">
+
+        <label for="stylistCoverage">
+          Coverage preference
+        </label>
+
+        <select id="stylistCoverage">
+
+          <option value="">
+            Any coverage
+          </option>
+
+          <option value="full">
+            Full Coverage
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- Description -->
+
+      <div class="stylist-field stylist-description">
+
+        <label for="stylistDescription">
+          Tell ABAIRA more
+        </label>
+
+        <textarea
+          id="stylistDescription"
+          rows="4"
+          placeholder="For example: I want something elegant and comfortable for a wedding..."
+        ></textarea>
+
+      </div>
+
+
+      <!-- CTA -->
+
+      <button
+        class="stylist-submit"
+        id="stylistRun"
+        type="button"
+      >
+
+        <span>
+          FIND MY ABAIRA
+        </span>
+
+        <span class="stylist-arrow">
+          →
+        </span>
+
+      </button>
 
     </div>
 
+
+    <!-- ================= SEMANTIC SEARCH ================= -->
+
+    <div
+      class="semantic-search-form"
+      id="semanticSearchForm"
+      style="display:none;"
+    >
+
+      <label for="aiInput">
+        Describe what you're looking for
+      </label>
+
+      <div class="semantic-search-row">
+
+        <input
+          id="aiInput"
+          type="text"
+          placeholder="e.g. elegant black burqa for an evening event"
+        />
+
+        <button
+          id="aiRun"
+          type="button"
+        >
+          EXPLORE
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- ================= AI RESULTS ================= -->
+
+    <div
+      class="ai-result"
+      id="aiResult"
+    ></div>
+
   </div>
+
+</div>
 
 
   <script type="module" src="app.js"></script>
