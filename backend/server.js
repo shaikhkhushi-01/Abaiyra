@@ -7,7 +7,7 @@ import { pipeline } from "@huggingface/transformers";
 
 
 /* =========================================
-   ABAIRA AI — LOCAL SEMANTIC SEARCH
+   ABAIRA AI — SEMANTIC SEARCH + AI STYLIST
 ========================================= */
 
 
@@ -42,17 +42,6 @@ const __dirname =
   path.dirname(__filename);
 
 
-/*
-  Repository structure:
-
-  Abaiyra/
-  ├── data/
-  │   └── products.json
-  │
-  └── backend/
-      └── server.js
-*/
-
 const productsPath =
   path.join(
     __dirname,
@@ -63,7 +52,7 @@ const productsPath =
 
 
 /* =========================================
-   MODEL CONFIGURATION
+   AI MODEL
 ========================================= */
 
 const MODEL_NAME =
@@ -80,7 +69,7 @@ let modelReady = false;
 
 
 /* =========================================
-   PRODUCT TEXT REPRESENTATION
+   PRODUCT → SEARCH TEXT
 ========================================= */
 
 function productToText(product) {
@@ -120,7 +109,7 @@ function productToText(product) {
 
 
 /* =========================================
-   VECTOR → ARRAY
+   TENSOR → ARRAY
 ========================================= */
 
 function tensorToArray(tensor) {
@@ -235,7 +224,7 @@ async function loadProducts() {
 
 
 /* =========================================
-   LOAD AI MODEL
+   LOAD MODEL
 ========================================= */
 
 async function loadModel() {
@@ -265,7 +254,7 @@ async function loadModel() {
 
 
 /* =========================================
-   BUILD PRODUCT INDEX
+   BUILD PRODUCT EMBEDDING INDEX
 ========================================= */
 
 async function buildProductIndex() {
@@ -282,10 +271,6 @@ async function buildProductIndex() {
     const product of products
   ) {
 
-    const searchableText =
-      productToText(product);
-
-
     console.log(
       `ABAIRA: embedding ${product.name}`
     );
@@ -293,7 +278,7 @@ async function buildProductIndex() {
 
     const embedding =
       await createEmbedding(
-        searchableText
+        productToText(product)
       );
 
 
@@ -329,7 +314,7 @@ app.get(
       status: "ok",
 
       service:
-        "ABAIRA AI Semantic Search",
+        "ABAIRA AI Semantic Search + Stylist",
 
       model:
         MODEL_NAME,
@@ -342,6 +327,10 @@ app.get(
 
       semanticSearch:
         modelReady &&
+        productEmbeddings.length > 0,
+
+      aiStylist:
+        modelReady &&
         productEmbeddings.length > 0
 
     });
@@ -351,7 +340,7 @@ app.get(
 
 
 /* =========================================
-   SEMANTIC SEARCH API
+   PHASE 1 — SEMANTIC SEARCH
 ========================================= */
 
 app.post(
@@ -363,10 +352,6 @@ app.post(
       const query =
         req.body?.query?.trim();
 
-
-      /* -------------------------------
-         VALIDATE QUERY
-      -------------------------------- */
 
       if (!query) {
 
@@ -380,10 +365,6 @@ app.post(
       }
 
 
-      /* -------------------------------
-         MODEL CHECK
-      -------------------------------- */
-
       if (
         !modelReady ||
         !extractor
@@ -392,49 +373,18 @@ app.post(
         return res.status(503).json({
 
           error:
-            "ABAIRA AI model is still loading. Please try again shortly."
+            "ABAIRA AI model is still loading."
 
         });
 
       }
 
-
-      /* -------------------------------
-         INDEX CHECK
-      -------------------------------- */
-
-      if (
-        !productEmbeddings.length
-      ) {
-
-        return res.status(503).json({
-
-          error:
-            "ABAIRA semantic index is not ready."
-
-        });
-
-      }
-
-
-      console.log(
-        `ABAIRA query: "${query}"`
-      );
-
-
-      /* -------------------------------
-         QUERY EMBEDDING
-      -------------------------------- */
 
       const queryEmbedding =
         await createEmbedding(
           query
         );
 
-
-      /* -------------------------------
-         SEMANTIC RETRIEVAL
-      -------------------------------- */
 
       const rankedResults =
         productEmbeddings
@@ -492,10 +442,6 @@ app.post(
           .slice(0, 3);
 
 
-      /* -------------------------------
-         RESPONSE
-      -------------------------------- */
-
       res.json({
 
         query,
@@ -539,6 +485,674 @@ app.post(
 
 
 /* =========================================
+   PHASE 2
+   AI STYLIST — HELPERS
+========================================= */
+
+
+/*
+  Safely convert values into arrays.
+*/
+
+function normalizeArray(value) {
+
+  if (Array.isArray(value)) {
+
+    return value
+      .map(item =>
+        String(item)
+          .toLowerCase()
+          .trim()
+      );
+
+  }
+
+
+  if (value === undefined || value === null) {
+
+    return [];
+
+  }
+
+
+  return [
+    String(value)
+      .toLowerCase()
+      .trim()
+  ];
+
+}
+
+
+/*
+  Calculate how strongly a product
+  matches a requested attribute.
+*/
+
+function attributeMatch(
+  productValues,
+  requestedValue
+) {
+
+  if (
+    !requestedValue
+  ) {
+
+    return 0;
+
+  }
+
+
+  const values =
+    normalizeArray(
+      productValues
+    );
+
+
+  const request =
+    String(
+      requestedValue
+    )
+      .toLowerCase()
+      .trim();
+
+
+  if (!request) {
+
+    return 0;
+
+  }
+
+
+  /*
+    Exact match
+  */
+
+  if (
+    values.includes(request)
+  ) {
+
+    return 1;
+
+  }
+
+
+  /*
+    Partial semantic-ish
+    lexical matching.
+  */
+
+  const partial =
+    values.some(value =>
+      value.includes(request) ||
+      request.includes(value)
+    );
+
+
+  if (partial) {
+
+    return 0.75;
+
+  }
+
+
+  return 0;
+
+}
+
+
+/* =========================================
+   COMFORT MATCH
+========================================= */
+
+function comfortMatch(
+  productComfort,
+  requestedComfort
+) {
+
+  if (
+    !requestedComfort
+  ) {
+
+    return 0;
+
+  }
+
+
+  const product =
+    String(
+      productComfort || ""
+    )
+      .toLowerCase();
+
+
+  const requested =
+    String(
+      requestedComfort
+    )
+      .toLowerCase();
+
+
+  if (
+    product === requested
+  ) {
+
+    return 1;
+
+  }
+
+
+  const comfortLevels = [
+    "low",
+    "medium",
+    "high",
+    "very-high"
+  ];
+
+
+  const productIndex =
+    comfortLevels.indexOf(
+      product
+    );
+
+
+  const requestedIndex =
+    comfortLevels.indexOf(
+      requested
+    );
+
+
+  if (
+    productIndex === -1 ||
+    requestedIndex === -1
+  ) {
+
+    return 0;
+
+  }
+
+
+  const difference =
+    Math.abs(
+      productIndex -
+      requestedIndex
+    );
+
+
+  if (difference === 1) {
+
+    return 0.7;
+
+  }
+
+
+  if (difference === 2) {
+
+    return 0.35;
+
+  }
+
+
+  return 0;
+
+}
+
+
+/* =========================================
+   BUILD STYLIST QUERY
+========================================= */
+
+function buildStylistQuery(preferences) {
+
+  const parts = [];
+
+
+  if (
+    preferences.occasion
+  ) {
+
+    parts.push(
+      `occasion ${preferences.occasion}`
+    );
+
+  }
+
+
+  if (
+    preferences.style
+  ) {
+
+    parts.push(
+      `style ${preferences.style}`
+    );
+
+  }
+
+
+  if (
+    preferences.color
+  ) {
+
+    parts.push(
+      `color ${preferences.color}`
+    );
+
+  }
+
+
+  if (
+    preferences.coverage
+  ) {
+
+    parts.push(
+      `coverage ${preferences.coverage}`
+    );
+
+  }
+
+
+  if (
+    preferences.description
+  ) {
+
+    parts.push(
+      preferences.description
+    );
+
+  }
+
+
+  return parts.join(". ");
+
+}
+
+
+/* =========================================
+   HYBRID STYLIST RANKING
+========================================= */
+
+async function rankStylistProducts(
+  preferences
+) {
+
+  const semanticQuery =
+    buildStylistQuery(
+      preferences
+    );
+
+
+  const queryEmbedding =
+    await createEmbedding(
+      semanticQuery
+    );
+
+
+  const ranked =
+    productEmbeddings.map(item => {
+
+      const product =
+        products.find(
+          p =>
+            p.id ===
+            item.productId
+        );
+
+
+      if (!product) {
+
+        return null;
+
+      }
+
+
+      /* -------------------------------
+         SEMANTIC SCORE
+      -------------------------------- */
+
+      const semanticSimilarity =
+        cosineSimilarity(
+          queryEmbedding,
+          item.embedding
+        );
+
+
+      /*
+        Convert semantic similarity
+        to 0–100.
+      */
+
+      const semanticScore =
+        Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(
+              semanticSimilarity * 100
+            )
+          )
+        );
+
+
+      /* -------------------------------
+         STRUCTURED MATCHES
+      -------------------------------- */
+
+      const occasionScore =
+        attributeMatch(
+          product.occasion,
+          preferences.occasion
+        );
+
+
+      const styleScore =
+        attributeMatch(
+          product.style,
+          preferences.style
+        );
+
+
+      const colorScore =
+        attributeMatch(
+          product.color,
+          preferences.color
+        );
+
+
+      const coverageScore =
+        attributeMatch(
+          product.coverage,
+          preferences.coverage
+        );
+
+
+      const comfortScore =
+        comfortMatch(
+          product.comfort,
+          preferences.comfort
+        );
+
+
+      /* -------------------------------
+         WEIGHTED SCORE
+      -------------------------------- */
+
+      const structuredScore =
+        (
+          occasionScore * 25 +
+          styleScore * 20 +
+          comfortScore * 15 +
+          colorScore * 10 +
+          coverageScore * 5
+        );
+
+
+      const finalScore =
+        (
+          semanticScore * 0.25 +
+          structuredScore
+        );
+
+
+      /* -------------------------------
+         MATCH REASONS
+      -------------------------------- */
+
+      const reasons = [];
+
+
+      if (
+        occasionScore >= 1
+      ) {
+
+        reasons.push(
+          `matches your ${preferences.occasion} occasion`
+        );
+
+      }
+
+
+      if (
+        styleScore >= 1
+      ) {
+
+        reasons.push(
+          `matches your ${preferences.style} style preference`
+        );
+
+      }
+
+
+      if (
+        comfortScore >= 1
+      ) {
+
+        reasons.push(
+          `matches your ${preferences.comfort} comfort preference`
+        );
+
+      }
+
+
+      if (
+        colorScore >= 1
+      ) {
+
+        reasons.push(
+          `matches your ${preferences.color} color preference`
+        );
+
+      }
+
+
+      if (
+        coverageScore >= 1
+      ) {
+
+        reasons.push(
+          `matches your ${preferences.coverage} coverage preference`
+        );
+
+      }
+
+
+      if (
+        reasons.length === 0
+      ) {
+
+        reasons.push(
+          "closely matches the overall description you provided"
+        );
+
+      }
+
+
+      return {
+
+        ...product,
+
+        score:
+          Number(
+            (
+              finalScore / 100
+            ).toFixed(4)
+          ),
+
+        matchScore:
+          Math.round(
+            finalScore
+          ),
+
+        matchBreakdown: {
+
+          semantic:
+            semanticScore,
+
+          occasion:
+            Math.round(
+              occasionScore * 100
+            ),
+
+          style:
+            Math.round(
+              styleScore * 100
+            ),
+
+          comfort:
+            Math.round(
+              comfortScore * 100
+            ),
+
+          color:
+            Math.round(
+              colorScore * 100
+            ),
+
+          coverage:
+            Math.round(
+              coverageScore * 100
+            )
+
+        },
+
+        reasons
+
+      };
+
+    })
+      .filter(Boolean)
+      .sort(
+        (a, b) =>
+          b.matchScore -
+          a.matchScore
+      );
+
+
+  return ranked;
+
+}
+
+
+/* =========================================
+   PHASE 2 — AI STYLIST API
+========================================= */
+
+app.post(
+  "/api/stylist",
+  async (req, res) => {
+
+    try {
+
+      const preferences =
+        req.body || {};
+
+
+      /* -------------------------------
+         VALIDATION
+      -------------------------------- */
+
+      const hasPreference =
+        preferences.occasion ||
+        preferences.style ||
+        preferences.color ||
+        preferences.comfort ||
+        preferences.coverage ||
+        preferences.description;
+
+
+      if (!hasPreference) {
+
+        return res.status(400).json({
+
+          error:
+            "Please provide at least one styling preference."
+
+        });
+
+      }
+
+
+      /* -------------------------------
+         MODEL CHECK
+      -------------------------------- */
+
+      if (
+        !modelReady ||
+        !extractor
+      ) {
+
+        return res.status(503).json({
+
+          error:
+            "ABAIRA AI stylist is still loading."
+
+        });
+
+      }
+
+
+      /* -------------------------------
+         RANK PRODUCTS
+      -------------------------------- */
+
+      const rankedProducts =
+        await rankStylistProducts(
+          preferences
+        );
+
+
+      const recommendations =
+        rankedProducts
+          .slice(0, 3);
+
+
+      /* -------------------------------
+         RESPONSE
+      -------------------------------- */
+
+      res.json({
+
+        success: true,
+
+        engine:
+          "ABAIRA Hybrid AI Stylist",
+
+        model:
+          MODEL_NAME,
+
+        preferences,
+
+        resultCount:
+          recommendations.length,
+
+        recommendations
+
+      });
+
+    }
+
+
+    catch (error) {
+
+      console.error(
+        "ABAIRA stylist error:",
+        error
+      );
+
+
+      res.status(500).json({
+
+        error:
+          "AI Stylist recommendation failed."
+
+      });
+
+    }
+
+  }
+);
+
+
+/* =========================================
    START SERVER
 ========================================= */
 
@@ -546,36 +1160,16 @@ async function startServer() {
 
   try {
 
-    /*
-      Step 1:
-      Load products
-    */
-
     await loadProducts();
 
-
-    /*
-      Step 2:
-      Load local AI model
-    */
 
     await loadModel();
 
     modelReady = true;
 
 
-    /*
-      Step 3:
-      Create product embeddings
-    */
-
     await buildProductIndex();
 
-
-    /*
-      Step 4:
-      Start HTTP server
-    */
 
     app.listen(
       PORT,
@@ -586,7 +1180,11 @@ async function startServer() {
         );
 
         console.log(
-          "ABAIRA: semantic search is ONLINE."
+          "ABAIRA: semantic search ONLINE."
+        );
+
+        console.log(
+          "ABAIRA: AI stylist ONLINE."
         );
 
       }
