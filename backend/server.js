@@ -706,63 +706,34 @@ function buildStylistQuery(preferences) {
 
   const parts = [];
 
-
-  if (
-    preferences.occasion
-  ) {
-
-    parts.push(
-      `occasion ${preferences.occasion}`
-    );
-
+  if (preferences.description) {
+    parts.push(preferences.description);
   }
 
-
-  if (
-    preferences.style
-  ) {
-
-    parts.push(
-      `style ${preferences.style}`
-    );
-
+  if (preferences.occasion) {
+    parts.push(`occasion: ${preferences.occasion}`);
   }
 
-
-  if (
-    preferences.color
-  ) {
-
-    parts.push(
-      `color ${preferences.color}`
-    );
-
+  if (preferences.style) {
+    parts.push(`style: ${preferences.style}`);
   }
 
-
-  if (
-    preferences.coverage
-  ) {
-
-    parts.push(
-      `coverage ${preferences.coverage}`
-    );
-
+  if (preferences.color) {
+    parts.push(`color: ${preferences.color}`);
   }
 
-
-  if (
-    preferences.description
-  ) {
-
-    parts.push(
-      preferences.description
-    );
-
+  if (preferences.comfort) {
+    parts.push(`comfort: ${preferences.comfort}`);
   }
 
+  if (preferences.coverage) {
+    parts.push(`coverage: ${preferences.coverage}`);
+  }
 
-  return parts.join(". ");
+  return parts
+    .join(". ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 }
 
@@ -1045,18 +1016,23 @@ app.post(
       const preferences =
         req.body || {};
 
+       const description =
+  typeof preferences.description === "string"
+    ? preferences.description.trim()
+    : "";
+
 
       /* -------------------------------
          VALIDATION
       -------------------------------- */
 
       const hasPreference =
-        preferences.occasion ||
-        preferences.style ||
-        preferences.color ||
-        preferences.comfort ||
-        preferences.coverage ||
-        preferences.description;
+  description ||
+  preferences.occasion ||
+  preferences.style ||
+  preferences.color ||
+  preferences.comfort ||
+  preferences.coverage;
 
 
       if (!hasPreference) {
@@ -1109,27 +1085,30 @@ app.post(
          RESPONSE
       -------------------------------- */
 
-      res.json({
+     res.json({
 
-        success: true,
+  success: true,
 
-        engine:
-          "ABAIRA Hybrid AI Stylist",
+  engine:
+    "ABAIRA Hybrid AI Stylist",
 
-        model:
-          MODEL_NAME,
+  retrievalMethod:
+    "Hybrid semantic + attribute-based ranking",
 
-        preferences,
+  model:
+    MODEL_NAME,
 
-        resultCount:
-          recommendations.length,
+  query:
+    buildStylistQuery(preferences),
 
-        recommendations
+  preferences,
 
-      });
+  resultCount:
+    recommendations.length,
 
-    }
+  recommendations
 
+});
 
     catch (error) {
 
