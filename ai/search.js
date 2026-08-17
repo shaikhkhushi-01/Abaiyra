@@ -1,10 +1,9 @@
 export function normalize(text) {
-  return text
+  return String(text || "")
     .toLowerCase()
     .replace(/[^\w\s-]/g, "")
     .trim();
 }
-
 
 export function tokenize(text) {
   return normalize(text)
@@ -12,23 +11,21 @@ export function tokenize(text) {
     .filter(Boolean);
 }
 
-
-/*
-  Simple retrieval baseline.
-
-  Later:
-
-  Keyword Retrieval
-        ↓
-  Embedding Retrieval
-        ↓
-  Compare performance
-*/
-
-
 export function scoreProduct(query, product) {
 
   const words = tokenize(query);
+
+  const occasions = Array.isArray(product.occasion)
+    ? product.occasion
+    : [];
+
+  const styles = Array.isArray(product.style)
+    ? product.style
+    : [];
+
+  const tags = Array.isArray(product.tags)
+    ? product.tags
+    : [];
 
   const searchableText = normalize([
     product.name,
@@ -37,14 +34,12 @@ export function scoreProduct(query, product) {
     product.comfort,
     product.coverage,
     product.description,
-    ...product.occasion,
-    ...product.style,
-    ...product.tags
+    ...occasions,
+    ...styles,
+    ...tags
   ].join(" "));
 
-
   let score = 0;
-
 
   words.forEach(word => {
 
@@ -52,50 +47,56 @@ export function scoreProduct(query, product) {
       score += 1;
     }
 
-    if (product.name.toLowerCase().includes(word)) {
+    if (
+      normalize(product.name).includes(word)
+    ) {
       score += 3;
     }
 
-    if (product.tags.some(tag =>
-      tag.toLowerCase().includes(word)
-    )) {
+    if (
+      tags.some(tag =>
+        normalize(tag).includes(word)
+      )
+    ) {
       score += 2;
     }
 
-    if (product.style.some(style =>
-      style.toLowerCase().includes(word)
-    )) {
+    if (
+      styles.some(style =>
+        normalize(style).includes(word)
+      )
+    ) {
       score += 2;
     }
 
-    if (product.occasion.some(occasion =>
-      occasion.toLowerCase().includes(word)
-    )) {
+    if (
+      occasions.some(occasion =>
+        normalize(occasion).includes(word)
+      )
+    ) {
       score += 2;
     }
 
   });
 
-
   return score;
 }
 
-
 export function searchProducts(query, products) {
 
-  if (!query || !products.length) {
+  if (
+    !query ||
+    !Array.isArray(products) ||
+    !products.length
+  ) {
     return [];
   }
 
-
-  const results = products
+  return products
     .map(product => ({
       ...product,
       score: scoreProduct(query, product)
     }))
     .filter(product => product.score > 0)
     .sort((a, b) => b.score - a.score);
-
-
-  return results;
 }
