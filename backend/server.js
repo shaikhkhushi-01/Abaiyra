@@ -351,21 +351,14 @@ app.post(
           : "";
 
 
-      /* ---------- VALIDATION ---------- */
-
       if (!query) {
 
         return res.status(400).json({
-
-          error:
-            "Search query is required."
-
+          error: "Search query is required."
         });
 
       }
 
-
-      /* ---------- MODEL CHECK ---------- */
 
       if (
         !modelReady ||
@@ -373,16 +366,27 @@ app.post(
       ) {
 
         return res.status(503).json({
-
           error:
             "ABAIRA AI model is still loading."
-
         });
 
       }
 
 
-      /* ---------- QUERY EMBEDDING ---------- */
+      /* =====================================
+         KEYWORD RETRIEVAL
+      ===================================== */
+
+      const keywordResults =
+        searchProducts(
+          query,
+          products
+        );
+
+
+      /* =====================================
+         SEMANTIC RETRIEVAL
+      ===================================== */
 
       const queryEmbedding =
         await createEmbedding(
@@ -390,9 +394,7 @@ app.post(
         );
 
 
-      /* ---------- RANK PRODUCTS ---------- */
-
-      const rankedResults =
+      const semanticResults =
         productEmbeddings
 
           .map(item => {
@@ -400,15 +402,12 @@ app.post(
             const product =
               products.find(
                 p =>
-                  p.id ===
-                  item.productId
+                  p.id === item.productId
               );
 
 
             if (!product) {
-
               return null;
-
             }
 
 
@@ -419,15 +418,73 @@ app.post(
               );
 
 
-            const matchScore =
-              Math.max(
-                0,
-                Math.min(
-                  100,
-                  Math.round(
-                    similarity * 100
+            return {
+
+              ...product,
+
+              similarity,
+
+              semanticScore:
+                Math.round(
+                  Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      similarity * 100
+                    )
                   )
                 )
+
+            };
+
+          })
+
+          .filter(Boolean);
+
+
+      /* =====================================
+         HYBRID RETRIEVAL
+      ===================================== */
+
+      const keywordMap =
+        new Map(
+          keywordResults.map(
+            product => [
+              product.id,
+              product.score
+            ]
+          )
+        );
+
+
+      const hybridResults =
+        semanticResults
+
+          .map(product => {
+
+            const keywordScore =
+              keywordMap.get(
+                product.id
+              ) || 0;
+
+
+            /*
+              Semantic similarity has the
+              primary weight.
+
+              Keyword matching provides
+              an additional retrieval signal.
+            */
+
+            const hybridScore =
+              (
+                product.similarity * 0.75
+              ) +
+              (
+                Math.min(
+                  keywordScore / 10,
+                  1
+                ) * 0.25
               );
 
 
@@ -437,27 +494,37 @@ app.post(
 
               score:
                 Number(
-                  similarity.toFixed(4)
+                  hybridScore.toFixed(4)
                 ),
 
-              matchScore
+              matchScore:
+                Math.round(
+                  Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      hybridScore * 100
+                    )
+                  )
+                ),
+
+              keywordScore
 
             };
 
           })
 
-          .filter(Boolean)
-
           .sort(
             (a, b) =>
-              b.score -
-              a.score
+              b.score - a.score
           )
 
           .slice(0, 3);
 
 
-      /* ---------- RESPONSE ---------- */
+      /* =====================================
+         RESPONSE
+      ===================================== */
 
       res.json({
 
@@ -466,16 +533,16 @@ app.post(
         query,
 
         retrievalMethod:
-          "local dense-vector semantic retrieval",
+          "hybrid keyword + dense-vector semantic retrieval",
 
         embeddingModel:
           MODEL_NAME,
 
         resultCount:
-          rankedResults.length,
+          hybridResults.length,
 
         results:
-          rankedResults
+          hybridResults
 
       });
 
@@ -489,6 +556,7 @@ app.post(
         error
       );
 
+
       res.status(500).json({
 
         error:
@@ -500,7 +568,6 @@ app.post(
 
   }
 );
-
 
 /* =========================================
    PHASE 2
