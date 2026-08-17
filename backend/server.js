@@ -5,6 +5,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { pipeline } from "@huggingface/transformers";
 
+import {
+  searchProducts
+} from "./retrieval.js";
+
 
 /* =========================================
    ABAIRA AI
