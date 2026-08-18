@@ -5,11 +5,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { pipeline } from "@huggingface/transformers";
 
-import {
-  searchProducts
-} from "./retrieval.js";
-
-
 /* =========================================
    ABAIRA AI
    SEMANTIC SEARCH + AI STYLIST
@@ -19,6 +14,7 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+const MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
 
 /* =========================================
    MIDDLEWARE
@@ -28,137 +24,216 @@ app.use(
   cors({
     origin: "*",
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"]
+    allowedHeaders: ["Content-Type"],
   })
 );
 
 app.use(express.json());
 
-
 /* =========================================
    PATH CONFIGURATION
 ========================================= */
 
-const __filename =
-  fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const __dirname =
-  path.dirname(__filename);
-
-const productsPath =
-  path.join(
-    __dirname,
-    "..",
-    "data",
-    "products.json"
-  );
-
+const productsPath = path.join(
+  __dirname,
+  "..",
+  "data",
+  "products.json"
+);
 
 /* =========================================
-   AI MODEL
+   AI STATE
 ========================================= */
 
-const MODEL_NAME =
-  "Xenova/all-MiniLM-L6-v2";
-
 let extractor = null;
-
 let products = [];
-
 let productEmbeddings = [];
-
 let modelReady = false;
 
+/* =========================================
+   NORMALIZATION HELPERS
+========================================= */
+
+function normalize(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim();
+}
+
+function normalizeArray(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => normalize(item))
+      .filter(Boolean);
+  }
+
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  return [normalize(value)].filter(Boolean);
+}
+
+function tokenize(text) {
+  return normalize(text)
+    .split(/\s+/)
+    .filter(Boolean);
+}
 
 /* =========================================
    PRODUCT → SEARCH TEXT
 ========================================= */
 
 function productToText(product) {
+  const occasion = normalizeArray(product.occasion);
+  const style = normalizeArray(product.style);
+  const tags = normalizeArray(product.tags);
 
   return [
-
-    `Product: ${product.name}`,
-
-    `Category: ${product.category}`,
-
-    `Color: ${product.color}`,
-
-    `Occasions: ${
-      Array.isArray(product.occasion)
-        ? product.occasion.join(", ")
-        : ""
-    }`,
-
-    `Style: ${
-      Array.isArray(product.style)
-        ? product.style.join(", ")
-        : ""
-    }`,
-
-    `Comfort: ${product.comfort}`,
-
-    `Coverage: ${product.coverage}`,
-
-    `Description: ${product.description}`
-
+    `Product: ${product.name || ""}`,
+    `Category: ${product.category || ""}`,
+    `Color: ${product.color || ""}`,
+    `Occasions: ${occasion.join(", ")}`,
+    `Style: ${style.join(", ")}`,
+    `Tags: ${tags.join(", ")}`,
+    `Comfort: ${product.comfort || ""}`,
+    `Coverage: ${product.coverage || ""}`,
+    `Description: ${product.description || ""}`,
   ]
     .join(". ")
     .replace(/\s+/g, " ")
     .trim();
-
 }
 
+/* =========================================
+   SIMPLE KEYWORD RETRIEVAL BASELINE
+========================================= */
+
+function scoreProduct(query, product) {
+  const words = tokenize(query);
+
+  const searchableText = normalize(
+    [
+      product.name,
+      product.category,
+      product.color,
+      product.comfort,
+      product.coverage,
+      product.description,
+      ...normalizeArray(product.occasion),
+      ...normalizeArray(product.style),
+      ...normalizeArray(product.tags),
+    ].join(" ")
+  );
+
+  const productName = normalize(product.name);
+
+  const tags = normalizeArray(product.tags);
+  const styles = normalizeArray(product.style);
+  const occasions = normalizeArray(product.occasion);
+
+  let score = 0;
+
+  words.forEach((word) => {
+    if (searchableText.includes(word)) {
+      score += 1;
+    }
+
+    if (productName.includes(word)) {
+      score += 3;
+    }
+
+    if (
+      tags.some((tag) =>
+        tag.includes(word)
+      )
+    ) {
+      score += 2;
+    }
+
+    if (
+      styles.some((style) =>
+        style.includes(word)
+      )
+    ) {
+      score += 2;
+    }
+
+    if (
+      occasions.some((occasion) =>
+        occasion.includes(word)
+      )
+    ) {
+      score += 2;
+    }
+  });
+
+  return score;
+}
+
+function keywordSearchProducts(query) {
+  if (!query || !products.length) {
+    return [];
+  }
+
+  return products
+    .map((product) => ({
+      ...product,
+      keywordScore: scoreProduct(
+        query,
+        product
+      ),
+    }))
+    .filter(
+      (product) =>
+        product.keywordScore > 0
+    )
+    .sort(
+      (a, b) =>
+        b.keywordScore -
+        a.keywordScore
+    );
+}
 
 /* =========================================
    TENSOR → ARRAY
 ========================================= */
 
 function tensorToArray(tensor) {
-
-  return Array.from(
-    tensor.data
-  );
-
+  return Array.from(tensor.data);
 }
-
 
 /* =========================================
    COSINE SIMILARITY
 ========================================= */
 
 function cosineSimilarity(a, b) {
-
   let dotProduct = 0;
-
   let magnitudeA = 0;
-
   let magnitudeB = 0;
 
-  for (
-    let i = 0;
-    i < a.length;
-    i++
-  ) {
+  const length = Math.min(
+    a.length,
+    b.length
+  );
 
-    dotProduct +=
-      a[i] * b[i];
+  for (let i = 0; i < length; i++) {
+    dotProduct += a[i] * b[i];
 
-    magnitudeA +=
-      a[i] * a[i];
+    magnitudeA += a[i] * a[i];
 
-    magnitudeB +=
-      b[i] * b[i];
-
+    magnitudeB += b[i] * b[i];
   }
 
   if (
     magnitudeA === 0 ||
     magnitudeB === 0
   ) {
-
     return 0;
-
   }
 
   return (
@@ -168,70 +243,64 @@ function cosineSimilarity(a, b) {
       Math.sqrt(magnitudeB)
     )
   );
-
 }
-
 
 /* =========================================
    CREATE EMBEDDING
 ========================================= */
 
 async function createEmbedding(text) {
-
   if (!extractor) {
-
     throw new Error(
       "Embedding model is not ready."
     );
-
   }
 
-  const output =
-    await extractor(
-      text,
-      {
-        pooling: "mean",
-        normalize: true
-      }
-    );
+  const output = await extractor(
+    text,
+    {
+      pooling: "mean",
+      normalize: true,
+    }
+  );
 
   return tensorToArray(output);
-
 }
-
 
 /* =========================================
    LOAD PRODUCTS
 ========================================= */
 
 async function loadProducts() {
-
   console.log(
     "ABAIRA: loading product dataset..."
   );
 
-  const file =
-    await fs.readFile(
-      productsPath,
-      "utf-8"
-    );
+  const file = await fs.readFile(
+    productsPath,
+    "utf-8"
+  );
 
-  products =
-    JSON.parse(file);
+  const parsed = JSON.parse(file);
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(
+      "products.json must contain an array."
+    );
+  }
+
+  products = parsed;
 
   console.log(
     `ABAIRA: ${products.length} products loaded.`
   );
-
 }
-
 
 /* =========================================
    LOAD LOCAL AI MODEL
 ========================================= */
 
 async function loadModel() {
-
   console.log(
     "ABAIRA: loading local embedding model..."
   );
@@ -240,35 +309,28 @@ async function loadModel() {
     `ABAIRA: model = ${MODEL_NAME}`
   );
 
-  extractor =
-    await pipeline(
-      "feature-extraction",
-      MODEL_NAME
-    );
+  extractor = await pipeline(
+    "feature-extraction",
+    MODEL_NAME
+  );
 
   console.log(
     "ABAIRA: embedding model ready."
   );
-
 }
-
 
 /* =========================================
    BUILD PRODUCT EMBEDDING INDEX
 ========================================= */
 
 async function buildProductIndex() {
-
   console.log(
     "ABAIRA: building semantic product index..."
   );
 
   productEmbeddings = [];
 
-  for (
-    const product of products
-  ) {
-
+  for (const product of products) {
     console.log(
       `ABAIRA: embedding ${product.name}`
     );
@@ -279,343 +341,15 @@ async function buildProductIndex() {
       );
 
     productEmbeddings.push({
-
-      productId:
-        product.id,
-
-      embedding
-
+      productId: product.id,
+      embedding,
     });
-
   }
 
   console.log(
     `ABAIRA: ${productEmbeddings.length} product embeddings ready.`
   );
-
 }
-
-
-/* =========================================
-   HEALTH CHECK
-========================================= */
-
-app.get(
-  "/api/health",
-  (req, res) => {
-
-    res.json({
-
-      status: "ok",
-
-      service:
-        "ABAIRA AI Semantic Search + Stylist",
-
-      model:
-        MODEL_NAME,
-
-      products:
-        products.length,
-
-      indexedProducts:
-        productEmbeddings.length,
-
-      semanticSearch:
-        modelReady &&
-        productEmbeddings.length > 0,
-
-      aiStylist:
-        modelReady &&
-        productEmbeddings.length > 0
-
-    });
-
-  }
-);
-
-
-/* =========================================
-   PHASE 1
-   SEMANTIC SEARCH
-========================================= */
-
-app.post(
-  "/api/search",
-  async (req, res) => {
-
-    try {
-
-      const query =
-        typeof req.body?.query === "string"
-          ? req.body.query.trim()
-          : "";
-
-
-      if (!query) {
-
-        return res.status(400).json({
-          error: "Search query is required."
-        });
-
-      }
-
-
-      if (
-        !modelReady ||
-        !extractor
-      ) {
-
-        return res.status(503).json({
-          error:
-            "ABAIRA AI model is still loading."
-        });
-
-      }
-
-
-      /* =====================================
-         KEYWORD RETRIEVAL
-      ===================================== */
-
-      const keywordResults =
-        searchProducts(
-          query,
-          products
-        );
-
-
-      /* =====================================
-         SEMANTIC RETRIEVAL
-      ===================================== */
-
-      const queryEmbedding =
-        await createEmbedding(
-          query
-        );
-
-
-      const semanticResults =
-        productEmbeddings
-
-          .map(item => {
-
-            const product =
-              products.find(
-                p =>
-                  p.id === item.productId
-              );
-
-
-            if (!product) {
-              return null;
-            }
-
-
-            const similarity =
-              cosineSimilarity(
-                queryEmbedding,
-                item.embedding
-              );
-
-
-            return {
-
-              ...product,
-
-              similarity,
-
-              semanticScore:
-                Math.round(
-                  Math.max(
-                    0,
-                    Math.min(
-                      100,
-                      similarity * 100
-                    )
-                  )
-                )
-
-            };
-
-          })
-
-          .filter(Boolean);
-
-
-      /* =====================================
-         HYBRID RETRIEVAL
-      ===================================== */
-
-      const keywordMap =
-        new Map(
-          keywordResults.map(
-            product => [
-              product.id,
-              product.score
-            ]
-          )
-        );
-
-
-      const hybridResults =
-        semanticResults
-
-          .map(product => {
-
-            const keywordScore =
-              keywordMap.get(
-                product.id
-              ) || 0;
-
-
-            /*
-              Semantic similarity has the
-              primary weight.
-
-              Keyword matching provides
-              an additional retrieval signal.
-            */
-
-            const hybridScore =
-              (
-                product.similarity * 0.75
-              ) +
-              (
-                Math.min(
-                  keywordScore / 10,
-                  1
-                ) * 0.25
-              );
-
-
-            return {
-
-              ...product,
-
-              score:
-                Number(
-                  hybridScore.toFixed(4)
-                ),
-
-              matchScore:
-                Math.round(
-                  Math.max(
-                    0,
-                    Math.min(
-                      100,
-                      hybridScore * 100
-                    )
-                  )
-                ),
-
-              keywordScore
-
-            };
-
-          })
-
-          .sort(
-            (a, b) =>
-              b.score - a.score
-          )
-
-          .slice(0, 3);
-
-
-      /* =====================================
-         RESPONSE
-      ===================================== */
-
-      res.json({
-
-        success: true,
-
-        query,
-
-        retrievalMethod:
-          "hybrid keyword + dense-vector semantic retrieval",
-
-        embeddingModel:
-          MODEL_NAME,
-
-        resultCount:
-          hybridResults.length,
-
-        results:
-          hybridResults
-
-      });
-
-    }
-
-
-    catch (error) {
-
-      console.error(
-        "ABAIRA search error:",
-        error
-      );
-
-
-      res.status(500).json({
-
-        error:
-          "Semantic search failed."
-
-      });
-
-    }
-
-  }
-);
-
-/* =========================================
-   PHASE 2
-   AI STYLIST HELPERS
-========================================= */
-
-
-/* =========================================
-   NORMALIZE VALUES TO ARRAY
-========================================= */
-
-function normalizeArray(value) {
-
-  if (Array.isArray(value)) {
-
-    return value
-      .map(item =>
-        String(item)
-          .toLowerCase()
-          .trim()
-      )
-      .filter(Boolean);
-
-  }
-
-
-  if (
-    value === undefined ||
-    value === null
-  ) {
-
-    return [];
-
-  }
-
-
-  const normalized =
-    String(value)
-      .toLowerCase()
-      .trim();
-
-
-  return normalized
-    ? [normalized]
-    : [];
-
-}
-
 
 /* =========================================
    ATTRIBUTE MATCH
@@ -625,66 +359,36 @@ function attributeMatch(
   productValues,
   requestedValue
 ) {
-
   if (!requestedValue) {
-
     return 0;
-
   }
-
 
   const values =
-    normalizeArray(
-      productValues
-    );
-
+    normalizeArray(productValues);
 
   const request =
-    String(
-      requestedValue
-    )
-      .toLowerCase()
-      .trim();
-
+    normalize(requestedValue);
 
   if (!request) {
-
     return 0;
-
   }
 
-
-  /* ---------- EXACT MATCH ---------- */
-
-  if (
-    values.includes(request)
-  ) {
-
+  if (values.includes(request)) {
     return 1;
-
   }
 
-
-  /* ---------- PARTIAL MATCH ---------- */
-
-  const partial =
-    values.some(value =>
+  const partial = values.some(
+    (value) =>
       value.includes(request) ||
       request.includes(value)
-    );
-
+  );
 
   if (partial) {
-
     return 0.75;
-
   }
 
-
   return 0;
-
 }
-
 
 /* =========================================
    COMFORT MATCH
@@ -694,103 +398,57 @@ function comfortMatch(
   productComfort,
   requestedComfort
 ) {
-
   if (!requestedComfort) {
-
     return 0;
-
   }
 
+  const product = normalize(
+    productComfort
+  );
 
-  const product =
-    String(
-      productComfort || ""
-    )
-      .toLowerCase()
-      .trim();
+  const requested = normalize(
+    requestedComfort
+  );
 
-
-  const requested =
-    String(
-      requestedComfort
-    )
-      .toLowerCase()
-      .trim();
-
-
-  if (
-    product === requested
-  ) {
-
+  if (product === requested) {
     return 1;
-
   }
-
 
   const comfortLevels = [
-
     "low",
-
     "medium",
-
     "high",
-
-    "very-high"
-
+    "very-high",
   ];
 
-
   const productIndex =
-    comfortLevels.indexOf(
-      product
-    );
-
+    comfortLevels.indexOf(product);
 
   const requestedIndex =
-    comfortLevels.indexOf(
-      requested
-    );
-
+    comfortLevels.indexOf(requested);
 
   if (
     productIndex === -1 ||
     requestedIndex === -1
   ) {
-
     return 0;
-
   }
 
-
-  const difference =
-    Math.abs(
-      productIndex -
+  const difference = Math.abs(
+    productIndex -
       requestedIndex
-    );
+  );
 
-
-  if (
-    difference === 1
-  ) {
-
+  if (difference === 1) {
     return 0.7;
-
   }
 
-
-  if (
-    difference === 2
-  ) {
-
+  if (difference === 2) {
     return 0.35;
-
   }
-
 
   return 0;
-
 }
-
 
 /* =========================================
    BUILD STYLIST QUERY
@@ -799,83 +457,53 @@ function comfortMatch(
 function buildStylistQuery(
   preferences
 ) {
-
   const parts = [];
 
+  const description =
+    typeof preferences.description ===
+    "string"
+      ? preferences.description.trim()
+      : "";
 
-  if (
-    preferences.description
-  ) {
-
-    parts.push(
-      preferences.description
-    );
-
+  if (description) {
+    parts.push(description);
   }
 
-
-  if (
-    preferences.occasion
-  ) {
-
+  if (preferences.occasion) {
     parts.push(
       `occasion: ${preferences.occasion}`
     );
-
   }
 
-
-  if (
-    preferences.style
-  ) {
-
+  if (preferences.style) {
     parts.push(
       `style: ${preferences.style}`
     );
-
   }
 
-
-  if (
-    preferences.color
-  ) {
-
+  if (preferences.color) {
     parts.push(
       `color: ${preferences.color}`
     );
-
   }
 
-
-  if (
-    preferences.comfort
-  ) {
-
+  if (preferences.comfort) {
     parts.push(
       `comfort: ${preferences.comfort}`
     );
-
   }
 
-
-  if (
-    preferences.coverage
-  ) {
-
+  if (preferences.coverage) {
     parts.push(
       `coverage: ${preferences.coverage}`
     );
-
   }
-
 
   return parts
     .join(". ")
     .replace(/\s+/g, " ")
     .trim();
-
 }
-
 
 /* =========================================
    HYBRID AI STYLIST RANKING
@@ -884,42 +512,33 @@ function buildStylistQuery(
 async function rankStylistProducts(
   preferences
 ) {
-
   const semanticQuery =
     buildStylistQuery(
       preferences
     );
-
 
   const queryEmbedding =
     await createEmbedding(
       semanticQuery
     );
 
-
   const ranked =
     productEmbeddings
-
-      .map(item => {
-
+      .map((item) => {
         const product =
           products.find(
-            p =>
+            (p) =>
               p.id ===
               item.productId
           );
 
-
         if (!product) {
-
           return null;
-
         }
 
-
-        /* =========================
+        /* -------------------------------
            SEMANTIC SCORE
-        ========================= */
+        -------------------------------- */
 
         const semanticSimilarity =
           cosineSimilarity(
@@ -927,22 +546,21 @@ async function rankStylistProducts(
             item.embedding
           );
 
-
         const semanticScore =
           Math.max(
             0,
             Math.min(
               100,
               Math.round(
-                semanticSimilarity * 100
+                semanticSimilarity *
+                  100
               )
             )
           );
 
-
-        /* =========================
+        /* -------------------------------
            STRUCTURED MATCHES
-        ========================= */
+        -------------------------------- */
 
         const occasionScore =
           attributeMatch(
@@ -950,13 +568,11 @@ async function rankStylistProducts(
             preferences.occasion
           );
 
-
         const styleScore =
           attributeMatch(
             product.style,
             preferences.style
           );
-
 
         const colorScore =
           attributeMatch(
@@ -964,13 +580,11 @@ async function rankStylistProducts(
             preferences.color
           );
 
-
         const coverageScore =
           attributeMatch(
             product.coverage,
             preferences.coverage
           );
-
 
         const comfortScore =
           comfortMatch(
@@ -978,143 +592,116 @@ async function rankStylistProducts(
             preferences.comfort
           );
 
+        /* -------------------------------
+           KEYWORD SCORE
+        -------------------------------- */
 
-        /* =========================
-           WEIGHTED SCORE
+        const keywordScore =
+          scoreProduct(
+            semanticQuery,
+            product
+          );
 
-           Semantic     = 25%
-           Occasion     = 25%
-           Style        = 20%
-           Comfort      = 15%
-           Color        = 10%
-           Coverage     = 5%
+        const normalizedKeywordScore =
+          Math.min(
+            100,
+            keywordScore * 10
+          );
 
-           TOTAL        = 100%
-        ========================= */
+        /* -------------------------------
+           WEIGHTED HYBRID SCORE
+        -------------------------------- */
 
-        const structuredScore =
-
-          occasionScore * 25 +
-
-          styleScore * 20 +
-
-          comfortScore * 15 +
-
-          colorScore * 10 +
-
-          coverageScore * 5;
-
+        /*
+          Semantic      = 35%
+          Occasion      = 20%
+          Style         = 15%
+          Comfort       = 10%
+          Color         = 5%
+          Coverage      = 5%
+          Keyword       = 10%
+        */
 
         const finalScore =
+          semanticScore * 0.35 +
+          occasionScore * 20 +
+          styleScore * 15 +
+          comfortScore * 10 +
+          colorScore * 5 +
+          coverageScore * 5 +
+          normalizedKeywordScore * 0.10;
 
-          semanticScore * 0.25 +
-
-          structuredScore;
-
-
-        /* =========================
+        /* -------------------------------
            MATCH REASONS
-        ========================= */
+        -------------------------------- */
 
         const reasons = [];
 
-
-        if (
-          occasionScore >= 1
-        ) {
-
+        if (occasionScore >= 1) {
           reasons.push(
             `matches your ${preferences.occasion} occasion`
           );
-
         }
 
-
-        if (
-          styleScore >= 1
-        ) {
-
+        if (styleScore >= 1) {
           reasons.push(
             `matches your ${preferences.style} style preference`
           );
-
         }
 
-
-        if (
-          comfortScore >= 1
-        ) {
-
+        if (comfortScore >= 1) {
           reasons.push(
             `matches your ${preferences.comfort} comfort preference`
           );
-
         }
 
-
-        if (
-          colorScore >= 1
-        ) {
-
+        if (colorScore >= 1) {
           reasons.push(
             `matches your ${preferences.color} color preference`
           );
-
         }
 
-
-        if (
-          coverageScore >= 1
-        ) {
-
+        if (coverageScore >= 1) {
           reasons.push(
             `matches your ${preferences.coverage} coverage preference`
           );
-
         }
-
 
         if (
           reasons.length === 0
         ) {
-
           reasons.push(
             "closely matches the overall description you provided"
           );
-
         }
 
-
-        /* =========================
-           RETURN PRODUCT
-        ========================= */
-
         return {
-
           ...product,
 
-          score:
-            Number(
-              (
-                finalScore / 100
-              ).toFixed(4)
-            ),
+          score: Number(
+            (
+              finalScore / 100
+            ).toFixed(4)
+          ),
 
-          matchScore:
-            Math.max(
-              0,
-              Math.min(
-                100,
-                Math.round(
-                  finalScore
-                )
+          matchScore: Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(
+                finalScore
               )
-            ),
+            )
+          ),
 
           matchBreakdown: {
-
             semantic:
               semanticScore,
+
+            keyword:
+              Math.round(
+                normalizedKeywordScore
+              ),
 
             occasion:
               Math.round(
@@ -1139,233 +726,274 @@ async function rankStylistProducts(
             coverage:
               Math.round(
                 coverageScore * 100
-              )
-
+              ),
           },
 
-          reasons
-
+          reasons,
         };
-
       })
-
       .filter(Boolean)
-
       .sort(
         (a, b) =>
           b.matchScore -
           a.matchScore
       );
 
-
   return ranked;
-
 }
 
+/* =========================================
+   HEALTH CHECK
+========================================= */
+
+app.get(
+  "/api/health",
+  (req, res) => {
+    res.json({
+      status: "ok",
+
+      service:
+        "ABAIRA AI Semantic Search + Stylist",
+
+      model: MODEL_NAME,
+
+      products:
+        products.length,
+
+      indexedProducts:
+        productEmbeddings.length,
+
+      semanticSearch:
+        modelReady &&
+        productEmbeddings.length > 0,
+
+      aiStylist:
+        modelReady &&
+        productEmbeddings.length > 0,
+
+      hybridRanking: true,
+
+      keywordBaseline: true,
+    });
+  }
+);
 
 /* =========================================
-   PHASE 2
-   AI STYLIST API
+   PHASE 1 — SEMANTIC SEARCH
 ========================================= */
 
 app.post(
-  "/api/stylist",
+  "/api/search",
   async (req, res) => {
-
     try {
-
-      const preferences =
-        req.body || {};
-
-
-      /* =========================
-         CLEAN DESCRIPTION
-      ========================= */
-
-      const description =
-
-        typeof preferences.description ===
+      const query =
+        typeof req.body?.query ===
         "string"
-
-          ? preferences.description.trim()
-
+          ? req.body.query.trim()
           : "";
 
-
-      /* =========================
-         VALIDATION
-      ========================= */
-
-      const hasPreference =
-
-        Boolean(description) ||
-
-        Boolean(preferences.occasion) ||
-
-        Boolean(preferences.style) ||
-
-        Boolean(preferences.color) ||
-
-        Boolean(preferences.comfort) ||
-
-        Boolean(preferences.coverage);
-
-
-      if (!hasPreference) {
-
+      if (!query) {
         return res.status(400).json({
-
           error:
-            "Please provide at least one styling preference."
-
+            "Search query is required.",
         });
-
       }
-
-
-      /* =========================
-         MODEL CHECK
-      ========================= */
 
       if (
         !modelReady ||
         !extractor
       ) {
-
         return res.status(503).json({
-
           error:
-            "ABAIRA AI stylist is still loading."
-
+            "ABAIRA AI model is still loading.",
         });
-
       }
 
+      const queryEmbedding =
+        await createEmbedding(
+          query
+        );
 
-      /* =========================
-         RANK PRODUCTS
-      ========================= */
+      const rankedResults =
+        productEmbeddings
+          .map((item) => {
+            const product =
+              products.find(
+                (p) =>
+                  p.id ===
+                  item.productId
+              );
+
+            if (!product) {
+              return null;
+            }
+
+            const similarity =
+              cosineSimilarity(
+                queryEmbedding,
+                item.embedding
+              );
+
+            return {
+              ...product,
+
+              score: Number(
+                similarity.toFixed(4)
+              ),
+
+              matchScore: Math.max(
+                0,
+                Math.min(
+                  100,
+                  Math.round(
+                    similarity * 100
+                  )
+                )
+              ),
+            };
+          })
+          .filter(Boolean)
+          .sort(
+            (a, b) =>
+              b.score - a.score
+          )
+          .slice(0, 3);
+
+      res.json({
+        query,
+
+        retrievalMethod:
+          "local dense-vector semantic retrieval",
+
+        embeddingModel:
+          MODEL_NAME,
+
+        resultCount:
+          rankedResults.length,
+
+        results:
+          rankedResults,
+      });
+    } catch (error) {
+      console.error(
+        "ABAIRA search error:",
+        error
+      );
+
+      res.status(500).json({
+        error:
+          "Semantic search failed.",
+      });
+    }
+  }
+);
+
+/* =========================================
+   PHASE 2 — AI STYLIST
+========================================= */
+
+app.post(
+  "/api/stylist",
+  async (req, res) => {
+    try {
+      const preferences =
+        req.body || {};
+
+      const description =
+        typeof preferences.description ===
+        "string"
+          ? preferences.description.trim()
+          : "";
+
+      const hasPreference =
+        Boolean(
+          description ||
+          preferences.occasion ||
+          preferences.style ||
+          preferences.color ||
+          preferences.comfort ||
+          preferences.coverage
+        );
+
+      if (!hasPreference) {
+        return res.status(400).json({
+          error:
+            "Please provide at least one styling preference.",
+        });
+      }
+
+      if (
+        !modelReady ||
+        !extractor
+      ) {
+        return res.status(503).json({
+          error:
+            "ABAIRA AI stylist is still loading.",
+        });
+      }
 
       const rankedProducts =
-        await rankStylistProducts({
-
-          ...preferences,
-
-          description
-
-        });
-
-
-      /* =========================
-         TOP 3
-      ========================= */
+        await rankStylistProducts(
+          preferences
+        );
 
       const recommendations =
         rankedProducts.slice(0, 3);
 
-
-      /* =========================
-         RESPONSE
-      ========================= */
-
-      return res.json({
-
+      res.json({
         success: true,
 
         engine:
           "ABAIRA Hybrid AI Stylist",
 
         retrievalMethod:
-          "Hybrid semantic + attribute-based ranking",
+          "Hybrid semantic + attribute + keyword ranking",
 
-        model:
-          MODEL_NAME,
+        model: MODEL_NAME,
 
         query:
-          buildStylistQuery({
-            ...preferences,
-            description
-          }),
+          buildStylistQuery(
+            preferences
+          ),
 
-        preferences: {
-
-          ...preferences,
-
-          description
-
-        },
+        preferences,
 
         resultCount:
           recommendations.length,
 
-        recommendations
-
+        recommendations,
       });
-
-    }
-
-
-    catch (error) {
-
+    } catch (error) {
       console.error(
         "ABAIRA stylist error:",
         error
       );
 
-
-      return res.status(500).json({
-
+      res.status(500).json({
         error:
-          "AI Stylist recommendation failed."
-
+          "AI Stylist recommendation failed.",
       });
-
     }
-
   }
 );
-
 
 /* =========================================
    START SERVER
 ========================================= */
 
 async function startServer() {
-
   try {
-
-    /* =========================
-       LOAD PRODUCTS
-    ========================= */
-
     await loadProducts();
-
-
-    /* =========================
-       LOAD AI MODEL
-    ========================= */
 
     await loadModel();
 
-
-    modelReady = true;
-
-
-    /* =========================
-       BUILD INDEX
-    ========================= */
-
     await buildProductIndex();
 
-
-    /* =========================
-       START EXPRESS SERVER
-    ========================= */
+    modelReady = true;
 
     app.listen(
       PORT,
       () => {
-
         console.log(
           `ABAIRA AI server running on port ${PORT}`
         );
@@ -1378,28 +1006,19 @@ async function startServer() {
           "ABAIRA: AI stylist ONLINE."
         );
 
+        console.log(
+          "ABAIRA: hybrid ranking ONLINE."
+        );
       }
     );
-
-  }
-
-
-  catch (error) {
-
+  } catch (error) {
     console.error(
       "ABAIRA backend startup failed:",
       error
     );
 
     process.exit(1);
-
   }
-
 }
-
-
-/* =========================================
-   START
-========================================= */
 
 startServer();
