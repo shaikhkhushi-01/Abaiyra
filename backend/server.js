@@ -889,6 +889,504 @@ app.post(
 );
 
 /* =========================================
+   ABAIRA AI STYLIST — PHASE 2
+========================================= */
+
+async function runAIStylist() {
+
+  const query = aiInput.value.trim();
+
+
+  /* ---------- EMPTY QUERY ---------- */
+
+  if (!query) {
+
+    aiResult.innerHTML = `
+
+      <div class="no-result">
+
+        <strong>
+          Tell ABAIRA about your style.
+        </strong>
+
+        <p>
+          Example: comfortable elegant black burqa for a wedding.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  /* ---------- LOADING ---------- */
+
+  aiResult.innerHTML = `
+
+    <div class="ai-loading">
+
+      <div class="loading-dot"></div>
+
+      <p>
+        ABAIRA is styling your look...
+      </p>
+
+      <small>
+        Combining semantic understanding with product attributes
+      </small>
+
+    </div>
+
+  `;
+
+
+  try {
+
+    /*
+      IMPORTANT:
+      API key is NOT used in frontend.
+      Request goes to our Render backend.
+    */
+
+    const response = await fetch(
+      "https://abaira-ai-backend.onrender.com/api/stylist",
+      {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+          description: query
+
+        })
+
+      }
+    );
+
+
+    const data =
+      await response.json();
+
+
+    /* ---------- API ERROR ---------- */
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "AI Stylist request failed."
+      );
+
+    }
+
+
+    /* ---------- RENDER ---------- */
+
+    renderStylistResults(
+      data.recommendations,
+      query,
+      data
+    );
+
+  }
+
+
+  catch (error) {
+
+    console.error(
+      "ABAIRA AI Stylist error:",
+      error
+    );
+
+
+    aiResult.innerHTML = `
+
+      <div class="no-result">
+
+        <strong>
+          ABAIRA couldn't complete the styling request.
+        </strong>
+
+        <p>
+          Please try again in a moment.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* =========================================
+   RENDER STYLIST RESULTS
+========================================= */
+
+function renderStylistResults(
+  recommendations,
+  query,
+  data
+) {
+
+  if (
+    !recommendations ||
+    !recommendations.length
+  ) {
+
+    aiResult.innerHTML = `
+
+      <div class="no-result">
+
+        <strong>
+          No close ABAIRA style match found.
+        </strong>
+
+        <p>
+          Try describing the occasion, color,
+          comfort or style you prefer.
+        </p>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  const topResults =
+    recommendations.slice(0, 3);
+
+
+  aiResult.innerHTML = `
+
+    <div class="search-heading">
+
+      <div>
+
+        <strong>
+          ABAIRA AI Stylist
+        </strong>
+
+        <p>
+          Personalized recommendations for
+          "${escapeHTML(query)}"
+        </p>
+
+      </div>
+
+      <span>
+        ${topResults.length} matches
+      </span>
+
+    </div>
+
+
+    <div class="ai-results-grid">
+
+      ${topResults
+        .map(product =>
+          createStylistCard(product)
+        )
+        .join("")}
+
+    </div>
+
+
+    <div class="retrieval-note">
+
+      <div>
+
+        <span>
+          AI ENGINE
+        </span>
+
+        <strong>
+          ${escapeHTML(
+            data.engine ||
+            "ABAIRA Hybrid AI Stylist"
+          )}
+        </strong>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          RETRIEVAL
+        </span>
+
+        <strong>
+          ${escapeHTML(
+            data.retrievalMethod ||
+            "Hybrid semantic + attribute-based ranking"
+          )}
+        </strong>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================
+   STYLIST PRODUCT CARD
+========================================= */
+
+function createStylistCard(product) {
+
+  const similarity =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Number(product.matchScore) || 0
+      )
+    );
+
+
+  const reasons =
+    Array.isArray(product.reasons)
+      ? product.reasons
+      : [];
+
+
+  return `
+
+    <article
+      class="ai-result-card"
+      data-product-id="${escapeHTML(
+        product.id
+      )}"
+    >
+
+      <div class="ai-result-image">
+
+        <img
+          src="${escapeHTML(
+            product.image || ""
+          )}"
+          alt="${escapeHTML(
+            product.name || "ABAIRA product"
+          )}"
+          loading="lazy"
+        >
+
+
+        <div class="similarity-badge">
+
+          ${similarity}% match
+
+        </div>
+
+      </div>
+
+
+      <div class="ai-result-content">
+
+        <span class="product-category">
+
+          ${escapeHTML(
+            product.category || ""
+          )}
+
+        </span>
+
+
+        <h3>
+
+          ${escapeHTML(
+            product.name || ""
+          )}
+
+        </h3>
+
+
+        <p>
+
+          ${escapeHTML(
+            product.description || ""
+          )}
+
+        </p>
+
+
+        <div class="product-meta">
+
+          ${
+            product.color
+              ? `<span>
+                  ${escapeHTML(product.color)}
+                </span>`
+              : ""
+          }
+
+
+          ${
+            product.comfort
+              ? `<span>
+                  ${escapeHTML(product.comfort)} comfort
+                </span>`
+              : ""
+          }
+
+
+          ${
+            product.coverage
+              ? `<span>
+                  ${escapeHTML(product.coverage)} coverage
+                </span>`
+              : ""
+          }
+
+        </div>
+
+
+        ${
+          reasons.length
+            ? `
+
+              <div class="stylist-reasons">
+
+                <strong>
+                  Why ABAIRA chose this
+                </strong>
+
+                <ul>
+
+                  ${reasons
+                    .slice(0, 3)
+                    .map(reason => `
+                      <li>
+                        ${escapeHTML(reason)}
+                      </li>
+                    `)
+                    .join("")}
+
+                </ul>
+
+              </div>
+
+            `
+            : ""
+        }
+
+
+        <div class="match-bar">
+
+          <div
+            class="match-bar-fill"
+            style="width:${similarity}%"
+          ></div>
+
+        </div>
+
+
+        <small>
+
+          AI stylist match:
+          ${similarity}%
+
+        </small>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+/* =========================================
+   AI STYLIST BUTTON
+========================================= */
+
+document
+  .querySelectorAll(".ai-demo")
+  .forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const type =
+        button.dataset.ai;
+
+
+      /*
+        Only replace the search action
+        when AI Stylist is selected.
+      */
+
+      if (type === "stylist") {
+
+        if (aiRun) {
+
+          aiRun.onclick =
+            runAIStylist;
+
+        }
+
+      }
+
+    });
+
+  });
+
+
+/* =========================================
+   STYLIST ENTER KEY
+========================================= */
+
+if (aiInput) {
+
+  aiInput.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter" &&
+        modal &&
+        modal.classList.contains("show")
+      ) {
+
+        const activeTitle =
+          modalTitle?.textContent || "";
+
+
+        if (
+          activeTitle
+            .toLowerCase()
+            .includes("stylist")
+        ) {
+
+          event.preventDefault();
+
+          runAIStylist();
+
+        }
+
+      }
+
+    }
+  );
+
+}
+
+/* =========================================
    PHASE 2 — AI STYLIST
 ========================================= */
 
