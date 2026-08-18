@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
 
@@ -11,153 +10,99 @@
 
   <meta
     name="description"
-    content="ABAIRA AI — Intelligent modest fashion discovery, semantic search and personal styling."
+    content="ABAIRA AI — Intelligent modest fashion discovery powered by semantic search and AI styling."
   >
 
   <title>ABAIRA AI — Intelligent Modest Fashion</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
-
   <link rel="stylesheet" href="styles.css">
 </head>
 
-
 <body>
 
-  <!-- ================= TOP BAR ================= -->
-
-  <div class="top-bar">
-    <span>ABAIRA AI</span>
-    <span>INTELLIGENT MODEST FASHION DISCOVERY</span>
-    <span>2026</span>
-  </div>
-
-
-  <!-- ================= NAVBAR ================= -->
+  <!-- =====================================================
+       NAVIGATION
+  ====================================================== -->
 
   <header class="navbar">
 
     <div class="nav-container">
 
       <a href="index.html" class="brand">
-
         <span class="brand-mark">A</span>
 
         <span class="brand-text">
-          ABAIRA
-          <small>AI COLLECTIONS</small>
+          <strong>ABAIRA</strong>
+          <small>AI FASHION INTELLIGENCE</small>
         </span>
-
       </a>
 
 
+      <nav class="nav-links" id="navLinks">
+
+        <a href="#home">Home</a>
+
+        <a href="#intelligence">AI Intelligence</a>
+
+        <a href="#how-it-works">How It Works</a>
+
+        <a href="#technology">Technology</a>
+
+      </nav>
+
+
       <button
-        class="menu-btn"
+        class="nav-ai-button"
+        data-ai="stylist"
+      >
+        <span>✦</span>
+        AI Stylist
+      </button>
+
+
+      <button
+        class="menu-button"
         id="menuBtn"
-        type="button"
         aria-label="Open menu"
       >
         ☰
       </button>
-
-
-      <nav
-        class="nav-links"
-        id="navLinks"
-      >
-
-        <a
-          href="index.html"
-          class="active"
-        >
-          Home
-        </a>
-
-        <a href="#collections">
-          Collections
-        </a>
-
-        <a href="#ai-studio">
-          AI Studio
-        </a>
-
-        <a href="#how-it-works">
-          How it works
-        </a>
-
-        <a href="about.html">
-          Our Story
-        </a>
-
-        <a href="contact.html">
-          Contact
-        </a>
-
-        <a
-          href="login.html"
-          class="nav-signin"
-        >
-          Sign In
-        </a>
-
-      </nav>
 
     </div>
 
   </header>
 
 
+
+  <!-- =====================================================
+       HERO
+  ====================================================== -->
+
   <main>
 
+    <section class="hero" id="home">
 
-    <!-- ================= HERO ================= -->
-
-    <section class="hero">
-
-      <div class="hero-grid">
+      <div class="hero-container">
 
         <div class="hero-content">
 
-          <div class="status-pill">
-
+          <div class="eyebrow">
             <span class="status-dot"></span>
-
-            ABAIRA INTELLIGENCE
-            <span>ONLINE</span>
-
+            ABAIRA AI ENGINE
           </div>
 
 
-          <p class="eyebrow">
-            THE AI-POWERED MODEST FASHION PLATFORM
-          </p>
-
-
           <h1>
-
-            Fashion
-            <span>understood.</span>
-
-            <strong>
-              Style, intelligently
-              discovered.
-            </strong>
-
+            Modest fashion,
+            <em>intelligently discovered.</em>
           </h1>
 
 
           <p class="hero-description">
 
-            ABAIRA uses semantic understanding and
-            intelligent recommendation to help you
-            discover modest fashion that actually
-            feels like you.
+            Search naturally. Discover intelligently.
+            Let ABAIRA understand your style, occasion,
+            comfort and coverage preferences.
 
           </p>
 
@@ -165,30 +110,21 @@
           <div class="hero-actions">
 
             <button
-              class="primary-btn"
-              type="button"
-              onclick="document.getElementById('ai-studio').scrollIntoView({behavior:'smooth'})"
+              class="primary-button"
+              data-ai="search"
             >
-
-              <span>✦</span>
-
-              ENTER AI STUDIO
-
-              <b>→</b>
-
+              <span>⌕</span>
+              Explore with AI
             </button>
 
 
-            <a
-              href="#collections"
-              class="secondary-btn"
+            <button
+              class="secondary-button"
+              data-ai="stylist"
             >
-
-              EXPLORE COLLECTION
-
-              <span>↓</span>
-
-            </a>
+              <span>✦</span>
+              Ask AI Stylist
+            </button>
 
           </div>
 
@@ -196,18 +132,18 @@
           <div class="hero-metrics">
 
             <div>
-              <strong>01</strong>
-              <span>Semantic Search</span>
+              <strong>AI</strong>
+              <span>Semantic Discovery</span>
             </div>
 
             <div>
-              <strong>02</strong>
-              <span>AI Stylist</span>
+              <strong>ML</strong>
+              <span>Hybrid Ranking</span>
             </div>
 
             <div>
-              <strong>03</strong>
-              <span>Smart Discovery</span>
+              <strong>24/7</strong>
+              <span>Intelligent Styling</span>
             </div>
 
           </div>
@@ -215,1263 +151,216 @@
         </div>
 
 
-        <!-- AI VISUAL — NO IMAGE -->
+        <!-- AI VISUAL -->
 
-        <div class="hero-ai">
+        <div class="hero-ai-card">
 
-          <div class="ai-orbit orbit-one"></div>
+          <div class="ai-card-glow"></div>
 
-          <div class="ai-orbit orbit-two"></div>
+          <div class="ai-card-top">
 
-          <div class="ai-orbit orbit-three"></div>
+            <span class="live-indicator">
+              <i></i>
+              AI ENGINE ONLINE
+            </span>
+
+            <span class="model-label">
+              MiniLM
+            </span>
+
+          </div>
 
 
-          <div class="ai-core">
+          <div class="ai-orb">
 
-            <div class="core-inner">
+            <div class="orb-ring ring-one"></div>
+            <div class="orb-ring ring-two"></div>
+            <div class="orb-core">
 
-              <span class="core-symbol">
-                A
-              </span>
-
-              <span class="core-label">
-                ABAIRA AI
-              </span>
+              <span>✦</span>
 
             </div>
 
           </div>
 
 
-          <div class="floating-card card-top">
+          <div class="ai-card-text">
 
-            <span class="mini-dot"></span>
+            <span>UNDERSTANDING YOUR REQUEST</span>
+
+            <strong>
+              Semantic fashion intelligence
+            </strong>
+
+            <p>
+              Natural language → embeddings → intelligent ranking
+            </p>
+
+          </div>
+
+
+          <div class="ai-card-lines">
 
             <div>
-              <small>SEMANTIC ENGINE</small>
-              <strong>READY</strong>
+              <span></span>
+              Occasion
+              <b>Detected</b>
             </div>
-
-          </div>
-
-
-          <div class="floating-card card-right">
-
-            <span>✦</span>
 
             <div>
-              <small>STYLE MATCH</small>
-              <strong>98.4%</strong>
+              <span></span>
+              Style
+              <b>Detected</b>
             </div>
-
-          </div>
-
-
-          <div class="floating-card card-bottom">
-
-            <span>AI</span>
 
             <div>
-              <small>PERSONALIZED</small>
-              <strong>FOR YOU</strong>
+              <span></span>
+              Comfort
+              <b>Detected</b>
             </div>
 
           </div>
-
-
-          <div class="hero-grid-lines"></div>
 
         </div>
 
       </div>
 
-
-      <div class="hero-bottom-line">
-
-        <span>
-          NATURAL LANGUAGE
-        </span>
-
-        <span>→</span>
-
-        <span>
-          SEMANTIC UNDERSTANDING
-        </span>
-
-        <span>→</span>
-
-        <span>
-          PERSONALIZED DISCOVERY
-        </span>
-
-      </div>
-
     </section>
 
 
-    <!-- ================= MARQUEE ================= -->
 
-    <section class="marquee">
-
-      <div class="marquee-track">
-
-        <span>MODEST FASHION</span>
-        <b>✦</b>
-
-        <span>AI STYLING</span>
-        <b>✦</b>
-
-        <span>SEMANTIC SEARCH</span>
-        <b>✦</b>
-
-        <span>PERSONAL DISCOVERY</span>
-        <b>✦</b>
-
-        <span>MODEST FASHION</span>
-        <b>✦</b>
-
-        <span>AI STYLING</span>
-        <b>✦</b>
-
-        <span>SEMANTIC SEARCH</span>
-        <b>✦</b>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= AI STUDIO ================= -->
+    <!-- =====================================================
+         AI INTELLIGENCE
+    ====================================================== -->
 
     <section
-      class="ai-section"
-      id="ai-studio"
+      class="intelligence-section"
+      id="intelligence"
     >
 
       <div class="section-container">
 
-
-        <div class="section-intro">
+        <div class="section-heading">
 
           <div>
 
-            <span class="section-index">
-              01 / AI STUDIO
+            <span class="section-label">
+              AI CAPABILITIES
             </span>
 
             <h2>
-              Tell us what
-              <span>you want.</span>
+              One interface.
+              <em>Multiple intelligence layers.</em>
             </h2>
 
           </div>
 
 
           <p>
-
-            Don't know the exact name of a design?
-            No problem. Describe the feeling,
-            occasion or style — ABAIRA understands
-            the meaning behind your words.
-
+            ABAIRA combines semantic understanding,
+            structured product attributes and hybrid
+            ranking to make fashion discovery more intelligent.
           </p>
 
         </div>
 
 
-        <div class="ai-grid">
+        <div class="ai-capability-grid">
 
 
           <!-- SEARCH -->
 
-          <article class="ai-card">
+          <button
+            class="ai-capability-card"
+            data-ai="search"
+          >
 
-            <div class="ai-card-top">
-
-              <span class="ai-card-number">
-                01
-              </span>
-
-              <span class="ai-card-icon">
-                ⌕
-              </span>
-
+            <div class="capability-number">
+              01
             </div>
 
-
-            <div class="ai-card-content">
-
-              <span class="card-label">
-                RETRIEVAL ENGINE
-              </span>
-
-              <h3>
-                Semantic
-                <span>Search</span>
-              </h3>
-
-              <p>
-
-                Search naturally. ABAIRA converts
-                your words into meaning and finds
-                the closest designs in the collection.
-
-              </p>
-
-
-              <button
-                class="ai-demo ai-card-button"
-                data-ai="search"
-                type="button"
-              >
-
-                TRY SEMANTIC SEARCH
-
-                <span>→</span>
-
-              </button>
-
+            <div class="capability-icon">
+              ⌕
             </div>
 
-          </article>
+            <h3>
+              Semantic Search
+            </h3>
+
+            <p>
+              Describe what you want in your own words.
+              ABAIRA searches by meaning rather than
+              relying only on exact keywords.
+            </p>
+
+            <span class="capability-link">
+              Try semantic search →
+            </span>
+
+          </button>
+
 
 
           <!-- STYLIST -->
 
-          <article class="ai-card featured">
-
-            <div class="featured-glow"></div>
-
-            <div class="ai-card-top">
-
-              <span class="ai-card-number">
-                02
-              </span>
-
-              <span class="ai-card-icon">
-                ✦
-              </span>
-
-            </div>
-
-
-            <div class="ai-card-content">
-
-              <span class="card-label">
-                RECOMMENDATION ENGINE
-              </span>
-
-              <h3>
-                AI
-                <span>Stylist</span>
-              </h3>
-
-              <p>
-
-                Tell ABAIRA your occasion,
-                style, comfort, colour and coverage.
-                Our hybrid engine ranks the best
-                matches for you.
-
-              </p>
-
-
-              <button
-                class="ai-demo ai-card-button"
-                data-ai="stylist"
-                type="button"
-              >
-
-                FIND MY STYLE
-
-                <span>→</span>
-
-              </button>
-
-            </div>
-
-          </article>
-
-
-          <!-- VISUAL -->
-
-          <article class="ai-card">
-
-            <div class="ai-card-top">
-
-              <span class="ai-card-number">
-                03
-              </span>
-
-              <span class="ai-card-icon">
-                ◌
-              </span>
-
-            </div>
-
-
-            <div class="ai-card-content">
-
-              <span class="card-label">
-                FUTURE ENGINE
-              </span>
-
-              <h3>
-                Visual
-                <span>Discovery</span>
-              </h3>
-
-              <p>
-
-                Discover designs through visual
-                characteristics, silhouettes,
-                textures and proportions.
-
-              </p>
-
-
-              <button
-                class="ai-demo ai-card-button"
-                data-ai="visual"
-                type="button"
-              >
-
-                EXPLORE CONCEPT
-
-                <span>→</span>
-
-              </button>
-
-            </div>
-
-          </article>
-
-        </div>
-
-
-        <!-- AI STATUS -->
-
-        <div class="ai-status-bar">
-
-          <div>
-
-            <span class="live-dot"></span>
-
-            ABAIRA AI SYSTEM
-
-          </div>
-
-
-          <div>
-            LOCAL EMBEDDINGS
-          </div>
-
-
-          <div>
-            HYBRID RANKING
-          </div>
-
-
-          <div>
-            PERSONALIZATION
-          </div>
-
-
-          <strong>
-            ONLINE
-          </strong>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= COLLECTIONS ================= -->
-
-    <section
-      class="collections-section"
-      id="collections"
-    >
-
-      <div class="section-container">
-
-
-        <div class="section-intro collection-heading">
-
-          <div>
-
-            <span class="section-index">
-              02 / COLLECTIONS
-            </span>
-
-            <h2>
-              Curated
-              <span>for every moment.</span>
-            </h2>
-
-          </div>
-
-
-          <a
-            href="service.html"
-            class="outline-link"
+          <button
+            class="ai-capability-card featured"
+            data-ai="stylist"
           >
 
-            VIEW FULL COLLECTION
-
-            <span>↗</span>
-
-          </a>
-
-        </div>
-
-
-        <div class="collection-grid">
-
-
-          <!-- COLLECTION 01 -->
-
-          <a
-            href="service.html"
-            class="collection-card collection-large"
-          >
-
-            <div class="collection-number">
-              01
-            </div>
-
-
-            <div class="collection-visual visual-signature">
-
-              <div class="visual-shape shape-one"></div>
-              <div class="visual-shape shape-two"></div>
-
-              <span>
-                A / 01
-              </span>
-
-            </div>
-
-
-            <div class="collection-info">
-
-              <div>
-
-                <small>
-                  SIGNATURE EDIT
-                </small>
-
-                <h3>
-                  The Signature
-                </h3>
-
-              </div>
-
-
-              <span class="collection-arrow">
-                ↗
-              </span>
-
-            </div>
-
-          </a>
-
-
-          <!-- COLLECTION 02 -->
-
-          <a
-            href="service.html"
-            class="collection-card"
-          >
-
-            <div class="collection-number">
+            <div class="capability-number">
               02
             </div>
 
-
-            <div class="collection-visual visual-everyday">
-
-              <div class="visual-line"></div>
-              <div class="visual-line"></div>
-              <div class="visual-line"></div>
-
-              <span>
-                A / 02
-              </span>
-
-            </div>
-
-
-            <div class="collection-info">
-
-              <div>
-
-                <small>
-                  EVERYDAY EDIT
-                </small>
-
-                <h3>
-                  Quiet Comfort
-                </h3>
-
-              </div>
-
-
-              <span class="collection-arrow">
-                ↗
-              </span>
-
-            </div>
-
-          </a>
-
-
-          <!-- COLLECTION 03 -->
-
-          <a
-            href="service.html"
-            class="collection-card"
-          >
-
-            <div class="collection-number">
-              03
-            </div>
-
-
-            <div class="collection-visual visual-occasion">
-
-              <div class="visual-star">
-                ✦
-              </div>
-
-              <div class="visual-circle"></div>
-
-              <span>
-                A / 03
-              </span>
-
-            </div>
-
-
-            <div class="collection-info">
-
-              <div>
-
-                <small>
-                  OCCASION EDIT
-                </small>
-
-                <h3>
-                  After Dark
-                </h3>
-
-              </div>
-
-
-              <span class="collection-arrow">
-                ↗
-              </span>
-
-            </div>
-
-          </a>
-
-
-          <!-- COLLECTION 04 -->
-
-          <a
-            href="service.html"
-            class="collection-card"
-          >
-
-            <div class="collection-number">
-              04
-            </div>
-
-
-            <div class="collection-visual visual-essential">
-
-              <div class="essential-grid">
-
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-
-              </div>
-
-              <span>
-                A / 04
-              </span>
-
-            </div>
-
-
-            <div class="collection-info">
-
-              <div>
-
-                <small>
-                  ESSENTIALS
-                </small>
-
-                <h3>
-                  Core Forms
-                </h3>
-
-              </div>
-
-
-              <span class="collection-arrow">
-                ↗
-              </span>
-
-            </div>
-
-          </a>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= HOW IT WORKS ================= -->
-
-    <section
-      class="process-section"
-      id="how-it-works"
-    >
-
-      <div class="section-container">
-
-
-        <div class="section-intro">
-
-          <div>
-
-            <span class="section-index">
-              03 / HOW IT WORKS
-            </span>
-
-            <h2>
-              Intelligence
-              <span>behind the experience.</span>
-            </h2>
-
-          </div>
-
-
-          <p>
-
-            ABAIRA combines natural-language
-            understanding with product attributes
-            to make fashion discovery more relevant.
-
-          </p>
-
-        </div>
-
-
-        <div class="process-grid">
-
-
-          <div class="process-item">
-
-            <span>01</span>
-
-            <div class="process-icon">
-              →
-            </div>
-
-            <h3>
-              You describe
-            </h3>
-
-            <p>
-              Tell ABAIRA what you are looking for
-              in your own words.
-            </p>
-
-          </div>
-
-
-          <div class="process-connector">
-            ─────────
-          </div>
-
-
-          <div class="process-item">
-
-            <span>02</span>
-
-            <div class="process-icon">
+            <div class="capability-icon">
               ✦
             </div>
 
             <h3>
-              AI understands
+              AI Stylist
             </h3>
 
             <p>
-              Your request is converted into semantic
-              meaning and compared with the collection.
+              Give ABAIRA your occasion, style, colour,
+              comfort and coverage preferences and let
+              the hybrid recommendation engine rank your options.
             </p>
 
-          </div>
-
-
-          <div class="process-connector">
-            ─────────
-          </div>
-
-
-          <div class="process-item">
-
-            <span>03</span>
-
-            <div class="process-icon">
-              ◎
-            </div>
-
-            <h3>
-              ABAIRA ranks
-            </h3>
-
-            <p>
-              Semantic relevance and product
-              preferences work together.
-            </p>
-
-          </div>
-
-
-          <div class="process-connector">
-            ─────────
-          </div>
-
-
-          <div class="process-item">
-
-            <span>04</span>
-
-            <div class="process-icon">
-              ✓
-            </div>
-
-            <h3>
-              You discover
-            </h3>
-
-            <p>
-              Receive a focused set of designs
-              matched to your request.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div class="tech-strip">
-
-          <span>
-            POWERED BY
-          </span>
-
-          <strong>
-            Xenova / all-MiniLM-L6-v2
-          </strong>
-
-          <span>
-            + HYBRID ATTRIBUTE RANKING
-          </span>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= MANIFESTO ================= -->
-
-    <section class="manifesto">
-
-      <div class="manifesto-glow"></div>
-
-      <div class="section-container manifesto-inner">
-
-        <span class="section-index">
-          ABAIRA / PHILOSOPHY
-        </span>
-
-
-        <h2>
-
-          Your style is personal.
-
-          <span>
-            Your discovery should be too.
-          </span>
-
-        </h2>
-
-
-        <p>
-
-          We are building a smarter way to discover
-          modest fashion — one that understands
-          context, preference and individuality.
-
-        </p>
-
-
-        <button
-          class="primary-btn light-btn"
-          type="button"
-          onclick="document.getElementById('ai-studio').scrollIntoView({behavior:'smooth'})"
-        >
-
-          <span>✦</span>
-
-          TRY ABAIRA AI
-
-          <b>→</b>
-
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= FOOTER ================= -->
-
-    <footer class="footer">
-
-      <div class="section-container footer-grid">
-
-
-        <div class="footer-brand">
-
-          <div class="brand">
-
-            <span class="brand-mark">
-              A
+            <span class="capability-link">
+              Meet your AI stylist →
             </span>
 
-            <span class="brand-text">
-              ABAIRA
-              <small>AI COLLECTIONS</small>
-            </span>
+          </button>
 
-          </div>
 
 
-          <p>
-            Intelligent discovery
-            for modest fashion.
-          </p>
-
-        </div>
-
-
-        <div class="footer-column">
-
-          <span>
-            EXPLORE
-          </span>
-
-          <a href="index.html">
-            Home
-          </a>
-
-          <a href="#collections">
-            Collections
-          </a>
-
-          <a href="about.html">
-            Our Story
-          </a>
-
-          <a href="contact.html">
-            Contact
-          </a>
-
-        </div>
-
-
-        <div class="footer-column">
-
-          <span>
-            AI STUDIO
-          </span>
-
-          <a href="#ai-studio">
-            Semantic Search
-          </a>
-
-          <a href="#ai-studio">
-            AI Stylist
-          </a>
-
-          <a href="#ai-studio">
-            Visual Discovery
-          </a>
-
-          <a href="#how-it-works">
-            How it works
-          </a>
-
-        </div>
-
-
-        <div class="footer-column">
-
-          <span>
-            SYSTEM
-          </span>
-
-          <p>
-            Semantic retrieval
-          </p>
-
-          <p>
-            Hybrid ranking
-          </p>
-
-          <p>
-            Personalization
-          </p>
-
-          <p class="online-text">
-            ● SYSTEM ONLINE
-          </p>
-
-        </div>
-
-      </div>
-
-
-      <div class="footer-bottom section-container">
-
-        <span>
-          © 2026 ABAIRA AI
-        </span>
-
-        <span>
-          MODEST FASHION / INTELLIGENTLY CURATED
-        </span>
-
-      </div>
-
-    </footer>
-
-  </main>
-
-
-  <!-- ==================================================
-       AI MODAL
-       IMPORTANT IDs — app.js uses these
-  ================================================== -->
-
-  <div
-    class="ai-modal"
-    id="aiModal"
-  >
-
-    <div class="ai-modal-card">
-
-
-      <button
-        class="ai-modal-close"
-        id="modalClose"
-        type="button"
-        aria-label="Close"
-      >
-        ×
-      </button>
-
-
-      <div class="ai-modal-header">
-
-        <span class="ai-modal-eyebrow">
-          ABAIRA / INTELLIGENCE
-        </span>
-
-
-        <h2 id="modalTitle">
-          AI Stylist
-        </h2>
-
-
-        <p id="modalDescription">
-
-          Tell ABAIRA what you're looking for
-          and discover the designs that best
-          match your preferences.
-
-        </p>
-
-      </div>
-
-
-      <!-- ================= STYLIST FORM ================= -->
-
-      <div
-        class="stylist-form"
-        id="stylistForm"
-      >
-
-
-        <div class="stylist-field">
-
-          <label for="stylistOccasion">
-            Occasion
-          </label>
-
-          <select id="stylistOccasion">
-
-            <option value="">
-              Select occasion
-            </option>
-
-            <option value="wedding">
-              Wedding
-            </option>
-
-            <option value="party">
-              Party
-            </option>
-
-            <option value="evening">
-              Evening
-            </option>
-
-            <option value="formal">
-              Formal
-            </option>
-
-            <option value="everyday">
-              Everyday
-            </option>
-
-            <option value="travel">
-              Travel
-            </option>
-
-            <option value="work">
-              Work
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="stylist-field">
-
-          <label for="stylistStyle">
-            Style
-          </label>
-
-          <select id="stylistStyle">
-
-            <option value="">
-              Select style
-            </option>
-
-            <option value="elegant">
-              Elegant
-            </option>
-
-            <option value="minimal">
-              Minimal
-            </option>
-
-            <option value="classic">
-              Classic
-            </option>
-
-            <option value="contemporary">
-              Contemporary
-            </option>
-
-            <option value="flowing">
-              Flowing
-            </option>
-
-            <option value="statement">
-              Statement
-            </option>
-
-            <option value="comfortable">
-              Comfortable
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="stylist-field">
-
-          <label for="stylistComfort">
-            Comfort
-          </label>
-
-          <select id="stylistComfort">
-
-            <option value="">
-              Select comfort
-            </option>
-
-            <option value="low">
-              Light
-            </option>
-
-            <option value="medium">
-              Medium
-            </option>
-
-            <option value="high">
-              High
-            </option>
-
-            <option value="very-high">
-              Very High
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="stylist-field">
-
-          <label for="stylistColor">
-            Colour
-          </label>
-
-          <select id="stylistColor">
-
-            <option value="">
-              Any colour
-            </option>
-
-            <option value="black">
-              Black
-            </option>
-
-            <option value="dark">
-              Dark
-            </option>
-
-            <option value="neutral">
-              Neutral
-            </option>
-
-            <option value="brown">
-              Brown
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="stylist-field">
-
-          <label for="stylistCoverage">
-            Coverage
-          </label>
-
-          <select id="stylistCoverage">
-
-            <option value="">
-              Any coverage
-            </option>
-
-            <option value="full">
-              Full
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="stylist-field stylist-description">
-
-          <label for="stylistDescription">
-            Describe your style
-          </label>
-
-          <textarea
-            id="stylistDescription"
-            rows="4"
-            placeholder="Example: I want something elegant and comfortable for a wedding..."
-          ></textarea>
-
-        </div>
-
-
-        <button
-          class="stylist-submit"
-          id="stylistRun"
-          type="button"
-        >
-
-          <span>
-            FIND MY ABAIRA STYLE
-          </span>
-
-          <strong>
-            →
-          </strong>
-
-        </button>
-
-      </div>
-
-
-      <!-- ================= SEMANTIC SEARCH ================= -->
-
-      <div
-        class="semantic-search-form"
-        id="semanticSearchForm"
-        style="display:none;"
-      >
-
-        <label for="aiInput">
-          Describe what you're looking for
-        </label>
-
-
-        <div class="semantic-search-row">
-
-          <input
-            id="aiInput"
-            type="text"
-            placeholder="e.g. elegant black burqa for an evening event"
-          >
-
+          <!-- VISUAL -->
 
           <button
-            id="aiRun"
-            type="button"
+            class="ai-capability-card"
+            data-ai="visual"
           >
 
-            SEARCH
+            <div class="capability-number">
+              03
+            </div>
 
-            <span>
-              →
+            <div class="capability-icon">
+              ◈
+            </div>
+
+            <h3>
+              Visual Discovery
+            </h3>
+
+            <p>
+              A future-ready discovery layer designed
+              to connect visual characteristics with
+              intelligent fashion retrieval.
+            </p>
+
+            <span class="capability-link">
+              Explore the concept →
             </span>
 
           </button>
@@ -1480,25 +369,590 @@
 
       </div>
 
+    </section>
 
-      <!-- ================= RESULTS ================= -->
+
+
+    <!-- =====================================================
+         HOW IT WORKS
+    ====================================================== -->
+
+    <section
+      class="process-section"
+      id="how-it-works"
+    >
+
+      <div class="section-container">
+
+        <div class="center-heading">
+
+          <span class="section-label">
+            INTELLIGENCE PIPELINE
+          </span>
+
+          <h2>
+            From words to
+            <em>recommendations.</em>
+          </h2>
+
+          <p>
+            ABAIRA transforms a natural-language request
+            into a ranked fashion recommendation.
+          </p>
+
+        </div>
+
+
+        <div class="pipeline">
+
+
+          <div class="pipeline-step">
+
+            <div class="step-number">
+              01
+            </div>
+
+            <div class="step-icon">
+              Aa
+            </div>
+
+            <h3>
+              Understand
+            </h3>
+
+            <p>
+              Your natural-language request is interpreted
+              by the AI system.
+            </p>
+
+          </div>
+
+
+          <div class="pipeline-line"></div>
+
+
+          <div class="pipeline-step">
+
+            <div class="step-number">
+              02
+            </div>
+
+            <div class="step-icon">
+              ∿
+            </div>
+
+            <h3>
+              Embed
+            </h3>
+
+            <p>
+              The request is converted into a semantic
+              vector representation.
+            </p>
+
+          </div>
+
+
+          <div class="pipeline-line"></div>
+
+
+          <div class="pipeline-step">
+
+            <div class="step-number">
+              03
+            </div>
+
+            <div class="step-icon">
+              ◫
+            </div>
+
+            <h3>
+              Retrieve
+            </h3>
+
+            <p>
+              Relevant products are retrieved from the
+              semantic product index.
+            </p>
+
+          </div>
+
+
+          <div class="pipeline-line"></div>
+
+
+          <div class="pipeline-step">
+
+            <div class="step-number">
+              04
+            </div>
+
+            <div class="step-icon">
+              ✦
+            </div>
+
+            <h3>
+              Rank
+            </h3>
+
+            <p>
+              Semantic, attribute and keyword signals
+              combine into a final ranking.
+            </p>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         TECHNOLOGY
+    ====================================================== -->
+
+    <section
+      class="technology-section"
+      id="technology"
+    >
+
+      <div class="section-container">
+
+        <div class="technology-panel">
+
+          <div class="technology-content">
+
+            <span class="section-label">
+              UNDER THE HOOD
+            </span>
+
+            <h2>
+              Built as an
+              <em>AI system.</em>
+            </h2>
+
+            <p>
+              ABAIRA is designed around a modular retrieval
+              and recommendation architecture rather than
+              a simple keyword search interface.
+            </p>
+
+
+            <div class="tech-list">
+
+              <div class="tech-item">
+
+                <span>01</span>
+
+                <div>
+                  <strong>Semantic Embeddings</strong>
+                  <small>
+                    Xenova / all-MiniLM-L6-v2
+                  </small>
+                </div>
+
+              </div>
+
+
+              <div class="tech-item">
+
+                <span>02</span>
+
+                <div>
+                  <strong>Dense Vector Retrieval</strong>
+                  <small>
+                    Cosine similarity based retrieval
+                  </small>
+                </div>
+
+              </div>
+
+
+              <div class="tech-item">
+
+                <span>03</span>
+
+                <div>
+                  <strong>Hybrid Ranking</strong>
+                  <small>
+                    Semantic + attributes + keyword signals
+                  </small>
+                </div>
+
+              </div>
+
+
+              <div class="tech-item">
+
+                <span>04</span>
+
+                <div>
+                  <strong>Explainable Recommendations</strong>
+                  <small>
+                    Match scores and recommendation reasons
+                  </small>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="architecture-card">
+
+            <div class="architecture-header">
+
+              <span>
+                SYSTEM ARCHITECTURE
+              </span>
+
+              <span class="architecture-live">
+                ● LIVE
+              </span>
+
+            </div>
+
+
+            <div class="architecture-flow">
+
+              <div class="architecture-node">
+                USER QUERY
+              </div>
+
+              <span>↓</span>
+
+              <div class="architecture-node">
+                EMBEDDING MODEL
+              </div>
+
+              <span>↓</span>
+
+              <div class="architecture-node split">
+
+                <span>SEMANTIC</span>
+                <span>ATTRIBUTES</span>
+                <span>KEYWORDS</span>
+
+              </div>
+
+              <span>↓</span>
+
+              <div class="architecture-node highlight">
+                HYBRID RANKER
+              </div>
+
+              <span>↓</span>
+
+              <div class="architecture-node">
+                TOP-K RECOMMENDATIONS
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         CTA
+    ====================================================== -->
+
+    <section class="cta-section">
+
+      <div class="cta-container">
+
+        <span class="section-label">
+          READY TO DISCOVER?
+        </span>
+
+        <h2>
+          Let AI understand
+          <em>your style.</em>
+        </h2>
+
+        <p>
+          Tell ABAIRA what you're looking for.
+          No complicated filters required.
+        </p>
+
+        <button
+          class="primary-button large"
+          data-ai="stylist"
+        >
+          <span>✦</span>
+          Start with AI Stylist
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+  <!-- =====================================================
+       AI MODAL
+  ====================================================== -->
+
+  <div
+    class="ai-modal"
+    id="aiModal"
+    aria-hidden="true"
+  >
+
+    <div class="modal-backdrop"></div>
+
+    <div
+      class="modal-container"
+      role="dialog"
+      aria-modal="true"
+    >
+
+      <button
+        class="modal-close"
+        id="modalClose"
+        aria-label="Close"
+      >
+        ×
+      </button>
+
+
+      <div class="modal-header">
+
+        <span class="modal-ai-label">
+          ABAIRA AI
+        </span>
+
+        <h2 id="modalTitle">
+          Semantic Search
+        </h2>
+
+        <p id="modalDescription">
+          Describe what you are looking for.
+        </p>
+
+      </div>
+
+
+
+      <!-- ================================================
+           SEMANTIC SEARCH FORM
+      ================================================= -->
+
+      <form
+        id="semanticSearchForm"
+        class="ai-form"
+      >
+
+        <label for="aiInput">
+          DESCRIBE YOUR STYLE
+        </label>
+
+        <textarea
+          id="aiInput"
+          rows="4"
+          placeholder="e.g. elegant black burqa for a wedding"
+        ></textarea>
+
+
+        <div class="input-hint">
+          <span>AI understands natural language</span>
+          <span>Press Enter to search</span>
+        </div>
+
+
+        <button
+          type="button"
+          class="primary-button full"
+          id="aiRun"
+        >
+          <span>⌕</span>
+          Search with AI
+        </button>
+
+      </form>
+
+
+
+      <!-- ================================================
+           AI STYLIST FORM
+      ================================================= -->
+
+      <form
+        id="stylistForm"
+        class="stylist-form"
+        style="display:none;"
+      >
+
+        <div class="stylist-grid">
+
+          <div class="form-field">
+
+            <label for="stylistOccasion">
+              OCCASION
+            </label>
+
+            <input
+              id="stylistOccasion"
+              type="text"
+              placeholder="Wedding, daily, formal..."
+            >
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label for="stylistStyle">
+              STYLE
+            </label>
+
+            <input
+              id="stylistStyle"
+              type="text"
+              placeholder="Elegant, minimal, modern..."
+            >
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label for="stylistComfort">
+              COMFORT
+            </label>
+
+            <input
+              id="stylistComfort"
+              type="text"
+              placeholder="Low, medium, high..."
+            >
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label for="stylistColor">
+              COLOUR
+            </label>
+
+            <input
+              id="stylistColor"
+              type="text"
+              placeholder="Black, beige, navy..."
+            >
+
+          </div>
+
+
+          <div class="form-field">
+
+            <label for="stylistCoverage">
+              COVERAGE
+            </label>
+
+            <input
+              id="stylistCoverage"
+              type="text"
+              placeholder="High, medium..."
+            >
+
+          </div>
+
+        </div>
+
+
+        <div class="form-field">
+
+          <label for="stylistDescription">
+            TELL ABAIRA MORE
+          </label>
+
+          <textarea
+            id="stylistDescription"
+            rows="4"
+            placeholder="Describe the complete look you have in mind..."
+          ></textarea>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="primary-button full"
+          id="stylistRun"
+        >
+          <span>✦</span>
+          Build My Look
+        </button>
+
+      </form>
+
+
+
+      <!-- ================================================
+           RESULTS
+      ================================================= -->
 
       <div
-        class="ai-result"
         id="aiResult"
+        class="ai-result"
       ></div>
-
 
     </div>
 
   </div>
 
 
-  <script
-    type="module"
-    src="app.js"
-  ></script>
+
+  <!-- =====================================================
+       FOOTER
+  ====================================================== -->
+
+  <footer class="footer">
+
+    <div class="footer-container">
+
+      <div class="footer-brand">
+
+        <strong>ABAIRA</strong>
+
+        <span>
+          AI FASHION INTELLIGENCE
+        </span>
+
+      </div>
+
+
+      <p>
+        Intelligent discovery for modest fashion.
+      </p>
+
+
+      <span class="footer-copy">
+        © 2026 ABAIRA AI
+      </span>
+
+    </div>
+
+  </footer>
+
+
+
+  <script src="app.js"></script>
 
 </body>
-
 </html>
